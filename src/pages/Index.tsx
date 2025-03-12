@@ -1,11 +1,24 @@
-// Update this page (the content is just a fallback if you fail to update the page)
+
+import React from "react";
+import PresentationForm from "@/components/PresentationForm";
 
 const Index = () => {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100">
-      <div className="text-center">
-        <h1 className="text-4xl font-bold mb-4">Welcome to Your Blank App</h1>
-        <p className="text-xl text-gray-600">Start building your amazing project here!</p>
+    <div className="min-h-screen bg-gradient-to-br from-ucl-light via-white to-ucl-green p-4">
+      <div className="max-w-4xl mx-auto">
+        <div className="text-center mb-8 animate-slide-up">
+          <div className="inline-block px-3 py-1 bg-ucl-purple/10 text-ucl-purple rounded-full text-sm mb-3">
+            UCL Presentation Generator
+          </div>
+          <h1 className="text-4xl font-bold text-ucl-dark mb-2">
+            Create Beautiful Presentations
+          </h1>
+          <p className="text-gray-600">
+            Transform your bullet points into professional presentations with AI
+            assistance
+          </p>
+        </div>
+        <PresentationForm />
       </div>
     </div>
   );
