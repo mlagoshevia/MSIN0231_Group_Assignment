@@ -50,7 +50,7 @@ const generateSlides = (data: PresentationData): SlideContent[] => {
     // One point per slide
     points.forEach((point, index) => {
       slides.push({
-        title: `Point ${index + 1}`,
+        title: `Key Point ${index + 1}`,
         points: [point]
       });
     });
@@ -83,31 +83,31 @@ const generateSlides = (data: PresentationData): SlideContent[] => {
 };
 
 /**
- * Get template colors based on selected template
+ * Get UCL template colors based on selected template
  */
 const getTemplateColors = (template: string): { primary: string; secondary: string; text: string } => {
   switch (template) {
     case "purple":
-      return { primary: "#8f1f6a", secondary: "#d6d3d8", text: "#000000" };
+      return { primary: "#8A1538", secondary: "#E8E3E7", text: "#000000" }; // UCL Purple
     case "dark":
-      return { primary: "#1c1c1c", secondary: "#333333", text: "#ffffff" };
+      return { primary: "#1D1D1D", secondary: "#333333", text: "#FFFFFF" }; // Dark theme
     case "light":
-      return { primary: "#f5f5f5", secondary: "#e0e0e0", text: "#000000" };
+      return { primary: "#F5F5F5", secondary: "#E0E0E0", text: "#000000" }; // Light theme
     case "green":
-      return { primary: "#006653", secondary: "#d6edde", text: "#000000" };
+      return { primary: "#006637", secondary: "#E8F4EB", text: "#000000" }; // UCL Green
     default:
-      return { primary: "#8f1f6a", secondary: "#d6d3d8", text: "#000000" }; // Default to UCL Purple
+      return { primary: "#8A1538", secondary: "#E8E3E7", text: "#000000" }; // Default to UCL Purple
   }
 };
 
 /**
- * Generate a PDF presentation and trigger download
+ * Generate a PDF presentation with PowerPoint-like styling
  */
 export const generatePresentation = (data: PresentationData): string => {
   const slides = generateSlides(data);
   const colors = getTemplateColors(data.template);
   
-  // Create PDF document
+  // Create PDF document in landscape orientation (PowerPoint-like)
   const doc = new jsPDF({
     orientation: "landscape",
     unit: "mm",
@@ -119,33 +119,58 @@ export const generatePresentation = (data: PresentationData): string => {
       doc.addPage();
     }
     
-    // Background
+    // Slide background
     doc.setFillColor(colors.secondary);
     doc.rect(0, 0, 297, 210, "F");
     
-    // Header bar
+    // Header bar (PowerPoint-style)
     doc.setFillColor(colors.primary);
     doc.rect(0, 0, 297, 20, "F");
     
-    // Title
-    doc.setTextColor(index === 0 ? colors.text : "#ffffff");
-    doc.setFontSize(index === 0 ? 30 : 24);
-    doc.text(slide.title, 20, index === 0 ? 60 : 35);
+    // Title formatting depends on slide type
+    if (index === 0) {
+      // Title slide
+      doc.setTextColor(colors.primary);
+      doc.setFontSize(36);
+      doc.setFont("helvetica", "bold");
+      doc.text(slide.title, 148.5, 80, { align: "center" });
+      
+      doc.setFontSize(20);
+      doc.setFont("helvetica", "normal");
+      slide.points.forEach((point, pointIndex) => {
+        doc.text(point, 148.5, 120 + (pointIndex * 15), { align: "center" });
+      });
+      
+      // UCL Logo text placeholder (would be an image in a real implementation)
+      doc.setFontSize(14);
+      doc.setTextColor(colors.primary);
+      doc.text("University College London", 148.5, 190, { align: "center" });
+    } else {
+      // Content slides
+      doc.setTextColor(colors.text === "#FFFFFF" ? "#FFFFFF" : colors.primary);
+      doc.setFontSize(28);
+      doc.setFont("helvetica", "bold");
+      doc.text(slide.title, 20, 40);
+      
+      // Content with bullet points
+      doc.setTextColor(colors.text);
+      doc.setFontSize(20);
+      doc.setFont("helvetica", "normal");
+      
+      slide.points.forEach((point, pointIndex) => {
+        const yPos = 70 + (pointIndex * 15);
+        doc.text(`• ${point}`, 30, yPos);
+      });
+    }
     
-    // Content
-    doc.setTextColor(colors.text);
-    doc.setFontSize(16);
+    // Footer with UCL branding and slide number
+    doc.setFillColor(colors.primary);
+    doc.rect(0, 200, 297, 10, "F");
     
-    slide.points.forEach((point, pointIndex) => {
-      const yPos = (index === 0 ? 80 : 50) + (pointIndex * 12);
-      doc.text(`• ${point}`, 30, yPos);
-    });
-    
-    // Footer with UCL branding
     doc.setFontSize(10);
-    doc.setTextColor(colors.text);
-    doc.text("UCL Presentation Generator", 20, 200);
-    doc.text(`Slide ${index + 1}/${slides.length}`, 250, 200);
+    doc.setTextColor("#FFFFFF");
+    doc.text("UCL Presentation Generator", 20, 207);
+    doc.text(`Slide ${index + 1}/${slides.length}`, 250, 207);
   });
   
   // Get the generated PDF as a data URL

@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -27,7 +28,7 @@ const TEMPLATE_OPTIONS = [
   { name: "UCL Purple", value: "purple" },
   { name: "Dark Theme", value: "dark" },
   { name: "Light Theme", value: "light" },
-  { name: "Green Nature", value: "green" },
+  { name: "UCL Green", value: "green" },
 ];
 
 const PresentationForm = () => {
@@ -130,6 +131,11 @@ const PresentationForm = () => {
               className="mt-1 h-32"
               placeholder="Enter your bullet points (one per line, starting with -)"
             />
+            <p className="text-xs text-gray-500 mt-1">
+              Each point should start with a dash (-). Example:<br />
+              - First important point<br />
+              - Second important point
+            </p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
