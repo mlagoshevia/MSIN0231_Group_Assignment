@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -13,7 +12,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/components/ui/use-toast";
-import { Loader2 } from "lucide-react";
+import { Loader2, Download } from "lucide-react";
+import { generatePresentation, downloadPresentation } from "@/utils/presentationGenerator";
 
 const AUDIENCE_OPTIONS = [
   "Students",
@@ -33,6 +33,7 @@ const TEMPLATE_OPTIONS = [
 const PresentationForm = () => {
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
+  const [presentationUrl, setPresentationUrl] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     title: "",
     bulletPoints: "",
@@ -45,13 +46,15 @@ const PresentationForm = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+    setPresentationUrl(null);
     
     // Log the form data
     console.log("Form submitted:", formData);
     
     try {
-      // Simulate API call - replace with actual API call in the future
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      // Generate the presentation
+      const pdfDataUri = generatePresentation(formData);
+      setPresentationUrl(pdfDataUri);
       
       // Show success toast
       toast({
@@ -60,9 +63,8 @@ const PresentationForm = () => {
         duration: 5000,
       });
       
-      // Future: Add code to generate and download the presentation
-      
     } catch (error) {
+      console.error("Error generating presentation:", error);
       // Show error toast
       toast({
         title: "Generation failed",
@@ -71,6 +73,18 @@ const PresentationForm = () => {
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleDownload = () => {
+    if (presentationUrl) {
+      const filename = `${formData.title.replace(/\s+/g, '_')}_presentation.pdf`;
+      downloadPresentation(presentationUrl, filename);
+      
+      toast({
+        title: "Downloading presentation",
+        description: "Your presentation is being downloaded.",
+      });
     }
   };
 
@@ -198,7 +212,7 @@ const PresentationForm = () => {
           </div>
         </div>
 
-        <div className="mt-6">
+        <div className="mt-6 space-y-4">
           <Button
             type="submit"
             className="w-full bg-ucl-purple hover:bg-ucl-purple/90 text-white"
@@ -213,6 +227,17 @@ const PresentationForm = () => {
               "Generate Presentation"
             )}
           </Button>
+          
+          {presentationUrl && (
+            <Button 
+              type="button"
+              onClick={handleDownload}
+              className="w-full bg-green-600 hover:bg-green-700 text-white"
+            >
+              <Download className="mr-2 h-4 w-4" />
+              Download Presentation
+            </Button>
+          )}
         </div>
       </Card>
     </form>
