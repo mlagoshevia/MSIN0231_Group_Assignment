@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -18,7 +17,7 @@ import { generatePresentation, downloadPresentation } from "@/utils/presentation
 
 const AUDIENCE_OPTIONS = [
   "Students",
-  "Academics",
+  "Academics", 
   "Business Professionals",
   "General Public",
   "Researchers",
@@ -34,7 +33,7 @@ const TEMPLATE_OPTIONS = [
 const PresentationForm = () => {
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
-  const [presentationUrl, setPresentationUrl] = useState<string | null>(null);
+  const [presentationBlob, setPresentationBlob] = useState<Blob | null>(null);
   const [formData, setFormData] = useState({
     title: "",
     bulletPoints: "",
@@ -47,19 +46,19 @@ const PresentationForm = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    setPresentationUrl(null);
+    setPresentationBlob(null);
     
     // Log the form data
     console.log("Form submitted:", formData);
     
     try {
       // Generate the presentation
-      const pdfDataUri = generatePresentation(formData);
-      setPresentationUrl(pdfDataUri);
+      const pptxBlob = generatePresentation(formData);
+      setPresentationBlob(pptxBlob);
       
       // Show success toast
       toast({
-        title: "Presentation generated!",
+        title: "PowerPoint generated!",
         description: `Your "${formData.title}" presentation has been created successfully.`,
         duration: 5000,
       });
@@ -69,7 +68,7 @@ const PresentationForm = () => {
       // Show error toast
       toast({
         title: "Generation failed",
-        description: "There was an error generating your presentation. Please try again.",
+        description: "There was an error generating your PowerPoint. Please try again.",
         variant: "destructive",
       });
     } finally {
@@ -78,13 +77,13 @@ const PresentationForm = () => {
   };
 
   const handleDownload = () => {
-    if (presentationUrl) {
-      const filename = `${formData.title.replace(/\s+/g, '_')}_presentation.pdf`;
-      downloadPresentation(presentationUrl, filename);
+    if (presentationBlob) {
+      const filename = `${formData.title.replace(/\s+/g, '_')}_presentation.pptx`;
+      downloadPresentation(presentationBlob, filename);
       
       toast({
-        title: "Downloading presentation",
-        description: "Your presentation is being downloaded.",
+        title: "Downloading PowerPoint",
+        description: "Your PowerPoint presentation is being downloaded.",
       });
     }
   };
@@ -234,7 +233,7 @@ const PresentationForm = () => {
             )}
           </Button>
           
-          {presentationUrl && (
+          {presentationBlob && (
             <Button 
               type="button"
               onClick={handleDownload}

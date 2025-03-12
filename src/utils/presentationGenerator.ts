@@ -1,5 +1,5 @@
 
-import { jsPDF } from "jspdf";
+import pptxgen from "pptxgenjs";
 
 // Define presentation data types
 export interface PresentationData {
@@ -101,91 +101,122 @@ const getTemplateColors = (template: string): { primary: string; secondary: stri
 };
 
 /**
- * Generate a PDF presentation with PowerPoint-like styling
+ * Generate a PowerPoint presentation with UCL branding
  */
-export const generatePresentation = (data: PresentationData): string => {
+export const generatePresentation = (data: PresentationData): Blob => {
   const slides = generateSlides(data);
   const colors = getTemplateColors(data.template);
   
-  // Create PDF document in landscape orientation (PowerPoint-like)
-  const doc = new jsPDF({
-    orientation: "landscape",
-    unit: "mm",
+  // Create new PowerPoint presentation
+  const pptx = new pptxgen();
+  
+  // Set presentation properties
+  pptx.layout = "LAYOUT_16x9";
+  pptx.author = "UCL Presentation Generator";
+  pptx.title = data.title;
+  pptx.subject = data.purpose;
+  
+  // Create master slide with UCL branding
+  pptx.defineSlideMaster({
+    title: "UCL_MASTER",
+    background: { color: colors.secondary },
+    objects: [
+      // Header
+      { rect: { x: 0, y: 0, w: '100%', h: 0.5, fill: { color: colors.primary } } },
+      // Footer
+      { rect: { x: 0, y: '95%', w: '100%', h: 0.3, fill: { color: colors.primary } } },
+      { text: { text: "UCL Presentation Generator", x: 0.5, y: '96.5%', w: 4, color: "#FFFFFF", fontSize: 8 } }
+    ]
   });
   
   // Generate each slide
   slides.forEach((slide, index) => {
-    if (index > 0) {
-      doc.addPage();
-    }
+    const pptxSlide = pptx.addSlide({ masterName: "UCL_MASTER" });
     
-    // Slide background
-    doc.setFillColor(colors.secondary);
-    doc.rect(0, 0, 297, 210, "F");
-    
-    // Header bar (PowerPoint-style)
-    doc.setFillColor(colors.primary);
-    doc.rect(0, 0, 297, 20, "F");
-    
-    // Title formatting depends on slide type
     if (index === 0) {
       // Title slide
-      doc.setTextColor(colors.primary);
-      doc.setFontSize(36);
-      doc.setFont("helvetica", "bold");
-      doc.text(slide.title, 148.5, 80, { align: "center" });
-      
-      doc.setFontSize(20);
-      doc.setFont("helvetica", "normal");
-      slide.points.forEach((point, pointIndex) => {
-        doc.text(point, 148.5, 120 + (pointIndex * 15), { align: "center" });
+      pptxSlide.addText(slide.title, {
+        x: '10%', 
+        y: '40%', 
+        w: '80%', 
+        h: 1.5, 
+        fontSize: 44, 
+        color: colors.primary, 
+        bold: true, 
+        align: 'center'
       });
       
-      // UCL Logo text placeholder (would be an image in a real implementation)
-      doc.setFontSize(14);
-      doc.setTextColor(colors.primary);
-      doc.text("University College London", 148.5, 190, { align: "center" });
+      // Purpose and audience
+      slide.points.forEach((point, pointIndex) => {
+        pptxSlide.addText(point, {
+          x: '10%',
+          y: `${50 + (pointIndex * 8)}%`,
+          w: '80%',
+          fontSize: 20,
+          color: colors.text === "#FFFFFF" ? "#FFFFFF" : colors.primary,
+          align: 'center'
+        });
+      });
+      
+      // UCL branding on title slide
+      pptxSlide.addText("University College London", {
+        x: '10%',
+        y: '85%',
+        w: '80%',
+        fontSize: 14,
+        color: colors.primary,
+        align: 'center'
+      });
     } else {
       // Content slides
-      doc.setTextColor(colors.text === "#FFFFFF" ? "#FFFFFF" : colors.primary);
-      doc.setFontSize(28);
-      doc.setFont("helvetica", "bold");
-      doc.text(slide.title, 20, 40);
+      pptxSlide.addText(slide.title, {
+        x: 0.5,
+        y: 0.7,
+        w: '95%',
+        fontSize: 32,
+        color: colors.text === "#FFFFFF" ? "#FFFFFF" : colors.primary,
+        bold: true
+      });
       
-      // Content with bullet points
-      doc.setTextColor(colors.text);
-      doc.setFontSize(20);
-      doc.setFont("helvetica", "normal");
-      
+      // Add bullet points
       slide.points.forEach((point, pointIndex) => {
-        const yPos = 70 + (pointIndex * 15);
-        doc.text(`• ${point}`, 30, yPos);
+        pptxSlide.addText(point, {
+          x: 0.7,
+          y: 1.5 + (pointIndex * 0.6),
+          w: '90%',
+          fontSize: 18,
+          color: colors.text,
+          bullet: { type: 'bullet' }
+        });
       });
     }
     
-    // Footer with UCL branding and slide number
-    doc.setFillColor(colors.primary);
-    doc.rect(0, 200, 297, 10, "F");
-    
-    doc.setFontSize(10);
-    doc.setTextColor("#FFFFFF");
-    doc.text("UCL Presentation Generator", 20, 207);
-    doc.text(`Slide ${index + 1}/${slides.length}`, 250, 207);
+    // Add slide number to footer (except title slide)
+    if (index > 0) {
+      pptxSlide.addText(`Slide ${index + 1}/${slides.length}`, {
+        x: '85%',
+        y: '96.5%',
+        w: 2,
+        color: "#FFFFFF",
+        fontSize: 8
+      });
+    }
   });
   
-  // Get the generated PDF as a data URL
-  const pdfDataUri = doc.output("datauristring");
-  return pdfDataUri;
+  // Generate the PowerPoint as a Blob
+  return pptx.writeFile({ outputType: 'blob' }) as unknown as Blob;
 };
 
 /**
  * Trigger download of the presentation
  */
-export const downloadPresentation = (dataUri: string, filename: string): void => {
+export const downloadPresentation = (blob: Blob, filename: string): void => {
+  const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
-  link.href = dataUri;
-  link.download = filename.endsWith(".pdf") ? filename : `${filename}.pdf`;
+  link.href = url;
+  link.download = filename.endsWith(".pptx") ? filename : `${filename}.pptx`;
   document.body.appendChild(link);
   link.click();
   document.body.removeChild(link);
+  URL.revokeObjectURL(url);
 };
