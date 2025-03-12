@@ -12,6 +12,8 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { useToast } from "@/components/ui/use-toast";
+import { Loader2 } from "lucide-react";
 
 const AUDIENCE_OPTIONS = [
   "Students",
@@ -29,6 +31,8 @@ const TEMPLATE_OPTIONS = [
 ];
 
 const PresentationForm = () => {
+  const { toast } = useToast();
+  const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     title: "",
     bulletPoints: "",
@@ -38,10 +42,46 @@ const PresentationForm = () => {
     slideCount: 5,
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Handle form submission
+    setLoading(true);
+    
+    // Log the form data
     console.log("Form submitted:", formData);
+    
+    try {
+      // Simulate API call - replace with actual API call in the future
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      
+      // Show success toast
+      toast({
+        title: "Presentation generated!",
+        description: `Your "${formData.title}" presentation has been created successfully.`,
+        duration: 5000,
+      });
+      
+      // Future: Add code to generate and download the presentation
+      
+    } catch (error) {
+      // Show error toast
+      toast({
+        title: "Generation failed",
+        description: "There was an error generating your presentation. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const isFormValid = () => {
+    return (
+      formData.title.trim() !== "" &&
+      formData.bulletPoints.trim() !== "" &&
+      formData.audience !== "" &&
+      formData.purpose.trim() !== "" &&
+      formData.template !== ""
+    );
   };
 
   return (
@@ -162,8 +202,16 @@ const PresentationForm = () => {
           <Button
             type="submit"
             className="w-full bg-ucl-purple hover:bg-ucl-purple/90 text-white"
+            disabled={!isFormValid() || loading}
           >
-            Generate Presentation
+            {loading ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Generating...
+              </>
+            ) : (
+              "Generate Presentation"
+            )}
           </Button>
         </div>
       </Card>
