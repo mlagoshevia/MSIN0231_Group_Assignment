@@ -52,7 +52,7 @@ const Index = () => {
         </div>
         
         <div className="text-center mb-8 animate-slide-up">
-          <div className="inline-flex items-center px-3 py-1" style={{ backgroundColor: `${colorPalette.main}20`, color: colorPalette.main }} className="rounded-full text-sm mb-3">
+          <div className="inline-flex items-center px-3 py-1 rounded-full text-sm mb-3" style={{ backgroundColor: `${colorPalette.main}20`, color: colorPalette.main }}>
             <Sparkles className="h-3.5 w-3.5 mr-1" />
             <span>UCL Presentation Generator</span>
           </div>
