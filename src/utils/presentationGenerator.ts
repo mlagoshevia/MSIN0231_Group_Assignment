@@ -1,15 +1,14 @@
 
 import pptxgen from "pptxgenjs";
-import { jsPDF } from "jspdf";
 
 // Define presentation data types
 export interface PresentationData {
   title: string;
-  keyPoints: string[];
+  keyPoints: string[]; // Changed from bulletPoints to keyPoints array
   audience: string;
   purpose: string;
   template: string;
-  apiKey?: string;
+  apiKey?: string; // Optional Gemini API key
 }
 
 interface SlideContent {
@@ -270,32 +269,19 @@ const generateSlides = async (data: PresentationData): Promise<SlideContent[]> =
 
 /**
  * Get UCL template colors based on selected template
- * Colors from UCL brand palette: https://www.ucl.ac.uk/brand/brand-essentials/colour-palette
  */
 const getTemplateColors = (template: string): { primary: string; secondary: string; text: string } => {
   switch (template) {
     case "purple":
-      return { primary: "#8F1F6B", secondary: "#F6EBF2", text: "#000000" }; // UCL Purple
+      return { primary: "#8A1538", secondary: "#E8E3E7", text: "#000000" }; // UCL Purple
     case "dark":
-      return { primary: "#0B0C0C", secondary: "#1D1D1D", text: "#FFFFFF" }; // Dark theme
+      return { primary: "#1D1D1D", secondary: "#333333", text: "#FFFFFF" }; // Dark theme
     case "light":
-      return { primary: "#FFFFFF", secondary: "#F7F7F7", text: "#000000" }; // Light theme
+      return { primary: "#F5F5F5", secondary: "#E0E0E0", text: "#000000" }; // Light theme
     case "green":
       return { primary: "#006637", secondary: "#E8F4EB", text: "#000000" }; // UCL Green
-    case "blue":
-      return { primary: "#0096D6", secondary: "#E6F4FB", text: "#000000" }; // UCL Blue
-    case "brightblue":
-      return { primary: "#00AEEF", secondary: "#E6F9FD", text: "#000000" }; // UCL Bright Blue
-    case "orange":
-      return { primary: "#D14700", secondary: "#FAEDE7", text: "#000000" }; // UCL Orange
-    case "yellow":
-      return { primary: "#A99D1C", secondary: "#F8F7E8", text: "#000000" }; // UCL Yellow
-    case "pink":
-      return { primary: "#91005A", secondary: "#F5E6EF", text: "#000000" }; // UCL Pink
-    case "red":
-      return { primary: "#C51918", secondary: "#F9E8E8", text: "#000000" }; // UCL Red
     default:
-      return { primary: "#8F1F6B", secondary: "#F6EBF2", text: "#000000" }; // Default to UCL Purple
+      return { primary: "#8A1538", secondary: "#E8E3E7", text: "#000000" }; // Default to UCL Purple
   }
 };
 
@@ -324,8 +310,7 @@ export const generatePresentation = async (data: PresentationData): Promise<Blob
       { rect: { x: 0, y: 0, w: '100%', h: 0.5, fill: { color: colors.primary } } },
       // Footer
       { rect: { x: 0, y: '95%', w: '100%', h: 0.3, fill: { color: colors.primary } } },
-      // Footer text
-      { text: { text: "UCL Presentation Generator", y: "95%", w: "100%", align: "left", fontSize: 8, color: "FFFFFF", margin: [0.5, 0, 0, 0] } }
+      { text: { text: "UCL Presentation Generator", fontSize: 8, color: "#FFFFFF" } }
     ]
   });
   
@@ -333,17 +318,16 @@ export const generatePresentation = async (data: PresentationData): Promise<Blob
   slides.forEach((slide, index) => {
     const pptxSlide = pptx.addSlide({ masterName: "UCL_MASTER" });
     
-    // Add UCL logo to top left of every slide - maintain aspect ratio
+    // Add UCL logo to top left of every slide
     pptxSlide.addImage({
       path: UCL_LOGO,
       x: 0.3,
-      y: 0.05,
+      y: 0.3,
       w: 1,
-      h: 0.4,
-      sizing: { type: "contain" }
+      h: 0.4
     });
     
-    // Add background image for visual interest (semi-transparent) - maintain aspect ratio
+    // Add background image for visual interest (semi-transparent)
     if (slide.image) {
       pptxSlide.addImage({
         path: slide.image,
@@ -351,7 +335,6 @@ export const generatePresentation = async (data: PresentationData): Promise<Blob
         y: 0,
         w: '100%',
         h: '100%',
-        sizing: { type: "cover" },
         transparency: 85, // 85% transparent
       });
     }
@@ -359,166 +342,84 @@ export const generatePresentation = async (data: PresentationData): Promise<Blob
     if (index === 0) {
       // Title slide
       pptxSlide.addText(slide.title, {
+        x: 1,
         y: 1.5,
-        w: '100%', 
+        w: '80%', 
         h: 1.5, 
-        align: 'center',
-        bold: true,
-        color: colors.primary,
-        fontSize: 44
+        fontSize: 44, 
+        color: colors.primary, 
+        bold: true, 
+        align: 'center'
       });
       
       // Purpose and audience
-      const yPositionIncrement = 0.7; // Increased spacing between text elements
       slide.points.forEach((point, pointIndex) => {
         pptxSlide.addText(point, {
-          y: 3 + pointIndex * yPositionIncrement,
-          w: '100%',
-          align: 'center',
+          x: 1,
+          y: 3 + pointIndex * 0.5,
+          w: '80%',
+          fontSize: 20,
           color: colors.text === "#FFFFFF" ? "#FFFFFF" : colors.primary,
-          fontSize: 20
+          align: 'center'
         });
       });
       
       // UCL branding on title slide
       pptxSlide.addText("University College London", {
-        y: 5.5,
-        w: '100%',
-        align: 'center',
+        x: 1,
+        y: 5,
+        w: '80%',
+        fontSize: 14,
         color: colors.primary,
-        fontSize: 14
+        align: 'center'
       });
     } else {
       // Content slides
       pptxSlide.addText(slide.title, {
-        x: 2, // Move right to avoid overlapping with UCL logo
+        x: 0.5,
         y: 0.8,
-        w: '85%', // Reduce width to avoid overflow
-        bold: true,
+        w: '95%',
+        fontSize: 32,
         color: colors.text === "#FFFFFF" ? "#FFFFFF" : colors.primary,
-        fontSize: 32
+        bold: true
       });
       
-      // Add bullet points with increased spacing to prevent overlap
-      const yStartPosition = 1.8;
-      const yPositionIncrement = 0.8; // Increased spacing between points
-      
+      // Add bullet points
       slide.points.forEach((point, pointIndex) => {
-        // Limit number of bullet points to prevent overflow
-        if (pointIndex < 5) {
-          pptxSlide.addText(point, {
-            x: 2, // Move right to ensure consistent alignment
-            y: yStartPosition + pointIndex * yPositionIncrement,
-            w: '85%', // Reduce width to prevent text overflow
-            bullet: { type: 'bullet' },
-            color: colors.text,
-            fontSize: 18,
-            breakLine: true, // Enable text wrapping
-            wrap: true,
-            fit: 'shrink' // Shrink text if needed to fit
-          });
-        }
+        pptxSlide.addText(point, {
+          x: 0.5,
+          y: 1.8 + pointIndex * 0.7,
+          w: '90%',
+          fontSize: 18,
+          color: colors.text,
+          bullet: { type: 'bullet' }
+        });
       });
     }
     
     // Add slide number to footer (except title slide)
     if (index > 0) {
       pptxSlide.addText(`Slide ${index}/${slides.length - 1}`, {
-        x: pptx.presLayout.width - 2, // Position from right
-        y: pptx.presLayout.height - 0.5, // Position from bottom
-        w: 1.5,
-        align: 'right',
-        color: "#FFFFFF",
-        fontSize: 8
+        x: 'right',
+        y: 'bottom',
+        fontSize: 8,
+        color: "#FFFFFF"
       });
     }
   });
   
   // Generate the PowerPoint as a Blob
-  const pptxBlob = await pptx.write({ outputType: 'blob' }) as Blob;
-  return pptxBlob;
-};
-
-/**
- * Generate a PDF version of the presentation
- */
-export const generatePDF = async (data: PresentationData): Promise<Blob> => {
-  const slides = await generateSlides(data);
-  const colors = getTemplateColors(data.template);
-  
-  // Create new PDF document
-  const pdf = new jsPDF({
-    orientation: 'landscape',
-    unit: 'mm',
-    format: 'a4'
-  });
-  
-  const pageWidth = pdf.internal.pageSize.getWidth();
-  const pageHeight = pdf.internal.pageSize.getHeight();
-  const margin = 10;
-  
-  // Generate each slide as a PDF page
-  slides.forEach((slide, index) => {
-    // Add a new page for each slide after the first
-    if (index > 0) {
-      pdf.addPage();
-    }
-    
-    // Set background color
-    pdf.setFillColor(colors.secondary);
-    pdf.rect(0, 0, pageWidth, pageHeight, 'F');
-    
-    // Add header
-    pdf.setFillColor(colors.primary);
-    pdf.rect(0, 0, pageWidth, 15, 'F');
-    
-    // Add footer
-    pdf.setFillColor(colors.primary);
-    pdf.rect(0, pageHeight - 10, pageWidth, 10, 'F');
-    
-    // Add slide title
-    pdf.setTextColor(colors.text === "#FFFFFF" ? "#FFFFFF" : colors.primary);
-    pdf.setFontSize(24);
-    pdf.text(slide.title, pageWidth / 2, margin + 25, { align: 'center' });
-    
-    // Add content
-    pdf.setFontSize(14);
-    const contentY = margin + 40;
-    const lineHeight = 10;
-    
-    slide.points.forEach((point, pointIndex) => {
-      pdf.text(`• ${point}`, margin + 10, contentY + (pointIndex * lineHeight), { 
-        maxWidth: pageWidth - (margin * 4) 
-      });
-    });
-    
-    // Add page number
-    pdf.setTextColor("#FFFFFF");
-    pdf.setFontSize(10);
-    if (index > 0) {
-      pdf.text(`Slide ${index}/${slides.length - 1}`, pageWidth - 20, pageHeight - 5);
-    }
-    
-    // Add "UCL Presentation Generator" text in footer
-    pdf.text("UCL Presentation Generator", 20, pageHeight - 5);
-  });
-  
-  // Generate PDF as blob
-  const pdfBlob = pdf.output('blob');
-  return pdfBlob;
+  return await pptx.write({ outputType: 'blob' }) as Blob;
 };
 
 /**
  * Trigger download of the presentation
  */
-export const downloadPresentation = (blob: Blob, filename: string, format: 'pptx' | 'pdf'): void => {
-  const extension = format === 'pptx' ? '.pptx' : '.pdf';
-  const cleanFilename = filename.endsWith(extension) ? filename : `${filename}${extension}`;
-  
+export const downloadPresentation = (blob: Blob, filename: string): void => {
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
   link.href = url;
-  link.download = cleanFilename;
+  link.download = filename.endsWith(".pptx") ? filename : `${filename}.pptx`;
   document.body.appendChild(link);
   link.click();
   document.body.removeChild(link);
