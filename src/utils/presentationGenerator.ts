@@ -1,3 +1,4 @@
+
 import pptxgen from "pptxgenjs";
 
 // Define presentation data types
@@ -280,7 +281,7 @@ const getTemplateColors = (template: string): { primary: string; secondary: stri
     case "purple":
       return { primary: "#500778", secondary: "#E8E3E7", text: "#000000" }; // UCL Vibrant Purple
     case "dark":
-      return { primary: "#002248", secondary: "#333333", text: "#FFFFFF" }; // UCL Dark Blue
+      return { primary: "#002248", secondary: "#E0E0E0", text: "#FFFFFF" }; // UCL Dark Blue
     case "light":
       return { primary: "#F5F5F5", secondary: "#E0E0E0", text: "#000000" }; // Light theme
     case "green":
@@ -318,7 +319,7 @@ export const generatePresentation = async (data: PresentationData): Promise<Blob
         { rect: { x: 0, y: 0, w: '100%', h: 0.5, fill: { color: colors.primary } } },
         // Footer
         { rect: { x: 0, y: '95%', w: '100%', h: 0.3, fill: { color: colors.primary } } },
-        { text: { text: "UCL Presentation Generator", x: 0.5, y: 6.7, w: 4, h: 0.3, color: "#FFFFFF", fontFace: "Arial", fontSize: 8 } }
+        { text: { text: "UCL Presentation Generator", y: 6.7, w: 4, h: 0.3, color: "#FFFFFF", fontFace: "Arial", fontSize: 8 } }
       ]
     });
     
@@ -401,14 +402,26 @@ export const generatePresentation = async (data: PresentationData): Promise<Blob
         });
       }
       
-      // Add UCL logo to top left of every slide (LAST action as requested)
+      // Text underneath the logo (added right before the logo)
+      pptxSlide.addText("UCL Presentation Generator", {
+        fontSize: 8,
+        color: "#FFFFFF",
+        x: 0.25,
+        y: 0.35,
+        w: 2,
+        h: 0.3,
+        align: "left",
+        fontFace: "Arial"
+      });
+      
+      // Add UCL logo to top left of every slide (as the LAST action as requested)
       pptxSlide.addImage({
         path: UCL_LOGO,
         x: 0,
         y: 0,
-        w: 1,
-        h: 0.4,
-        sizing: { type: "contain", w: 1, h: 0.4 }
+        w: 0.5,
+        h: 0.3,
+        sizing: { type: "contain", w: 0.5, h: 0.3 }
       });
     });
     
