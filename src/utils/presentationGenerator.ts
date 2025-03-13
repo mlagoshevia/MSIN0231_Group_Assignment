@@ -1,4 +1,3 @@
-
 import pptxgen from "pptxgenjs";
 
 // Define presentation data types
@@ -319,7 +318,7 @@ export const generatePresentation = async (data: PresentationData): Promise<Blob
         { rect: { x: 0, y: 0, w: '100%', h: 0.5, fill: { color: colors.primary } } },
         // Footer
         { rect: { x: 0, y: '95%', w: '100%', h: 0.3, fill: { color: colors.primary } } },
-        { text: { text: "UCL Presentation Generator", y: 6.7, w: 4, h: 0.3, color: "#FFFFFF", fontFace: "Arial", fontSize: 8 } }
+        { text: { text: "UCL Presentation Generator", x: 0.5, y: 6.7, w: 4, h: 0.3, color: "#FFFFFF", fontFace: "Arial", fontSize: 8 } }
       ]
     });
     

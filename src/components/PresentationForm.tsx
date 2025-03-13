@@ -20,7 +20,8 @@ import {
   Plus, 
   Trash2,
   X,
-  Move
+  Move,
+  ExternalLink
 } from "lucide-react";
 import { generatePresentation, downloadPresentation } from "@/utils/presentationGenerator";
 
@@ -105,14 +106,12 @@ const PresentationForm = () => {
     setLoading(true);
     setPresentationBlob(null);
     
-    // Log the form data
     console.log("Form submitted:", { 
       ...formData, 
-      apiKey: formData.apiKey ? "********" : "" // Hide API key in logs
+      apiKey: formData.apiKey ? "********" : "" 
     });
     
     try {
-      // Start the AI generation process
       setGeneratingAI(true);
       toast({
         title: "AI is crafting your presentation",
@@ -120,11 +119,9 @@ const PresentationForm = () => {
         duration: 3000,
       });
       
-      // Generate the presentation with Gemini-enhanced content
       const pptxBlob = await generatePresentation(formData);
       setPresentationBlob(pptxBlob);
       
-      // Show success toast
       toast({
         title: "PowerPoint generated!",
         description: `Your "${formData.title}" presentation has been created with Gemini-enhanced content.`,
@@ -190,14 +187,34 @@ const PresentationForm = () => {
           </div>
 
           <div>
+            <Label htmlFor="purpose" className="text-sm font-medium">
+              Presentation Purpose
+            </Label>
+            <Textarea
+              id="purpose"
+              value={formData.purpose}
+              onChange={(e) =>
+                setFormData({ ...formData, purpose: e.target.value })
+              }
+              className="mt-1"
+              placeholder="Describe the purpose of your presentation"
+            />
+            <p className="text-xs text-gray-500 mt-1">
+              This should be a brief explanation and/or structure of the purpose of this presentation.
+            </p>
+          </div>
+
+          <div>
             <Label className="text-sm font-medium flex justify-between items-center">
               <span>Key Points (Each will become a slide)</span>
               <span className="text-xs text-gray-500">
                 {formData.keyPoints.length} points added
               </span>
             </Label>
+            <p className="text-xs text-gray-500 mb-2">
+              Each point will act as a prompt. Gemini will use it as reference to generate content of that slide.
+            </p>
             
-            {/* List of existing key points */}
             <div className="mt-2 space-y-2">
               {formData.keyPoints.map((point, index) => (
                 <div 
@@ -252,7 +269,6 @@ const PresentationForm = () => {
               )}
             </div>
             
-            {/* Add new key point */}
             <div className="mt-2 flex gap-2">
               <Input
                 value={newKeyPoint}
@@ -330,21 +346,6 @@ const PresentationForm = () => {
             </div>
           </div>
 
-          <div>
-            <Label htmlFor="purpose" className="text-sm font-medium">
-              Presentation Purpose
-            </Label>
-            <Textarea
-              id="purpose"
-              value={formData.purpose}
-              onChange={(e) =>
-                setFormData({ ...formData, purpose: e.target.value })
-              }
-              className="mt-1"
-              placeholder="Describe the purpose of your presentation"
-            />
-          </div>
-
           <div className="relative">
             <Label htmlFor="apiKey" className="text-sm font-medium flex items-center gap-1">
               <Key className="h-3.5 w-3.5" />
@@ -371,8 +372,16 @@ const PresentationForm = () => {
                 {showApiKey ? "Hide" : "Show"}
               </Button>
             </div>
-            <p className="text-xs text-gray-500 mt-1">
+            <p className="text-xs text-gray-500 mt-1 flex items-center">
               Get a Gemini API key from the Google AI Developer Console. Required for AI-enhanced presentation content.
+              <a 
+                href="https://aistudio.google.com/app/apikey" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="inline-flex items-center ml-1 text-ucl-purple hover:underline"
+              >
+                Get API key <ExternalLink className="h-3 w-3 ml-0.5" />
+              </a>
             </p>
           </div>
         </div>
