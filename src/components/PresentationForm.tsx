@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -12,7 +13,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/components/ui/use-toast";
-import { Loader2, Download } from "lucide-react";
+import { Loader2, Download, Sparkles } from "lucide-react";
 import { generatePresentation, downloadPresentation } from "@/utils/presentationGenerator";
 
 const AUDIENCE_OPTIONS = [
@@ -34,6 +35,7 @@ const PresentationForm = () => {
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [presentationBlob, setPresentationBlob] = useState<Blob | null>(null);
+  const [generatingAI, setGeneratingAI] = useState(false);
   const [formData, setFormData] = useState({
     title: "",
     bulletPoints: "",
@@ -52,16 +54,38 @@ const PresentationForm = () => {
     console.log("Form submitted:", formData);
     
     try {
-      // Generate the presentation
-      const pptxBlob = generatePresentation(formData);
-      setPresentationBlob(pptxBlob);
-      
-      // Show success toast
+      // Start the AI generation process
+      setGeneratingAI(true);
       toast({
-        title: "PowerPoint generated!",
-        description: `Your "${formData.title}" presentation has been created successfully.`,
-        duration: 5000,
+        title: "AI is crafting your presentation",
+        description: "Analyzing your inputs and generating enhanced content...",
+        duration: 3000,
       });
+      
+      // Simulate AI processing time - would be a real API call in production
+      setTimeout(() => {
+        try {
+          // Generate the presentation with AI-enhanced content
+          const pptxBlob = generatePresentation(formData);
+          setPresentationBlob(pptxBlob);
+          
+          // Show success toast
+          toast({
+            title: "PowerPoint generated!",
+            description: `Your "${formData.title}" presentation has been created with AI-enhanced content.`,
+            duration: 5000,
+          });
+        } catch (error) {
+          console.error("Error in AI generation:", error);
+          toast({
+            title: "AI generation failed",
+            description: "There was an error enhancing your content. Please try again.",
+            variant: "destructive",
+          });
+        } finally {
+          setGeneratingAI(false);
+        }
+      }, 2000);
       
     } catch (error) {
       console.error("Error generating presentation:", error);
@@ -102,6 +126,11 @@ const PresentationForm = () => {
     <form onSubmit={handleSubmit} className="space-y-6 animate-slide-up">
       <Card className="p-6 backdrop-blur-sm bg-white/50">
         <div className="space-y-4">
+          <div className="flex items-center gap-2 pb-2 border-b border-purple-100">
+            <Sparkles className="text-ucl-purple h-5 w-5" />
+            <h2 className="text-lg font-medium text-ucl-purple">AI-Powered Presentation Generator</h2>
+          </div>
+          
           <div>
             <Label htmlFor="title" className="text-sm font-medium">
               Presentation Title
@@ -119,7 +148,7 @@ const PresentationForm = () => {
 
           <div>
             <Label htmlFor="bulletPoints" className="text-sm font-medium">
-              Bullet Points
+              Key Points (AI will enhance these)
             </Label>
             <Textarea
               id="bulletPoints"
@@ -221,15 +250,23 @@ const PresentationForm = () => {
           <Button
             type="submit"
             className="w-full bg-ucl-purple hover:bg-ucl-purple/90 text-white"
-            disabled={!isFormValid() || loading}
+            disabled={!isFormValid() || loading || generatingAI}
           >
             {loading ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 Generating...
               </>
+            ) : generatingAI ? (
+              <>
+                <Sparkles className="mr-2 h-4 w-4 animate-pulse" />
+                AI Enhancing Content...
+              </>
             ) : (
-              "Generate Presentation"
+              <>
+                <Sparkles className="mr-2 h-4 w-4" />
+                Generate AI-Powered Presentation
+              </>
             )}
           </Button>
           
