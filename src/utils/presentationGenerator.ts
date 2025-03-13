@@ -594,19 +594,15 @@ export const generatePresentation = async (data: PresentationData): Promise<Blob
             break;
             
           case SlideLayout.IMAGE_BACKGROUND:
-            // Background image with 85% transparency overlay
+            // Background image with semi-transparent overlay
             if (hasUploadedImage && keyPoint?.imageFile) {
               try {
                 // Use the uploaded image as background
                 const imageData = await fileToBase64(keyPoint.imageFile);
                 
-                // Set background with the image, ensuring it's transparent at 15% opacity (85% transparency)
-                pptxSlide.background = { 
-                  data: imageData
-                };
-                
                 // Add a white semi-transparent overlay for better readability
                 // The transparency is set to 0.85 (85% transparent)
+                // Add this FIRST so it's behind all other elements
                 pptxSlide.addShape('rect', {
                   x: 0,
                   y: 0.5,
@@ -615,13 +611,19 @@ export const generatePresentation = async (data: PresentationData): Promise<Blob
                   fill: { color: "FFFFFF", transparency: 0.85 }
                 });
                 
-                console.log(`Added background image for slide ${index} with transparent overlay`);
+                // Set background with the image after adding the shape
+                // This ensures the shape is on top of the background but behind text
+                pptxSlide.background = { 
+                  data: imageData
+                };
+                
+                console.log(`Added background image for slide ${index} with transparent overlay behind text`);
               } catch (error) {
                 console.error(`Error adding background image to slide ${index}:`, error);
               }
             }
             
-            // Text overlay with standardized font size
+            // Text overlay with standardized font size - added AFTER the shape
             slide.points.forEach((point, pointIndex) => {
               pptxSlide.addText(point, {
                 fontSize: standardPointFontSize,
