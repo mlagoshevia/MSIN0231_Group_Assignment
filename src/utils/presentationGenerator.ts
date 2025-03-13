@@ -1,3 +1,4 @@
+
 import pptxgen from "pptxgenjs";
 
 // Define presentation data types
@@ -400,7 +401,8 @@ export const generatePresentation = async (data: PresentationData): Promise<Blob
         
         // Purpose and audience - make subtitle text black by default
         slide.points.forEach((point, pointIndex) => {
-          const pointFontSize = calculateFontSize(point);
+          // Use a standardized font size for all subtitle points
+          const pointFontSize = 18;
           pptxSlide.addText(point, {
             fontSize: pointFontSize,
             color: "#000000", // Set to black by default
@@ -431,15 +433,18 @@ export const generatePresentation = async (data: PresentationData): Promise<Blob
         const keyPoint = keyPointIndex >= 0 ? data.keyPoints[keyPointIndex] : null;
         const hasUploadedImage = keyPoint?.imageFile !== undefined && keyPoint?.imageFile !== null;
         
+        // Standardize bullet point font size for all points in the slide
+        // Use 18pt as the standard size for all bullet points
+        const standardPointFontSize = 18;
+        
         // Apply different layouts based on the slide type
         switch(layoutType) {
           case SlideLayout.IMAGE_RIGHT:
             // Text on left (70%), image on right (30%)
-            // Add dynamic font sizing for text
+            // Use standardized font size for all points on the slide
             slide.points.forEach((point, pointIndex) => {
-              const pointFontSize = calculateFontSize(point);
               pptxSlide.addText(point, {
-                fontSize: pointFontSize,
+                fontSize: standardPointFontSize,
                 color: "#000000",
                 bullet: { type: 'bullet' },
                 x: 0.5,
@@ -460,7 +465,7 @@ export const generatePresentation = async (data: PresentationData): Promise<Blob
                   y: 1.8,
                   w: 3,
                   h: 3.5,
-                  sizing: { type: "contain", w: 3, h: 3.5 }
+                  sizing: { type: "cover", w: 3, h: 3.5 } // Use "cover" to frame the image
                 });
                 console.log(`Added image for slide ${index}, layout: IMAGE_RIGHT`);
               } catch (error) {
@@ -501,9 +506,8 @@ export const generatePresentation = async (data: PresentationData): Promise<Blob
           case SlideLayout.IMAGE_LEFT:
             // Image on left (30%), text on right (70%)
             slide.points.forEach((point, pointIndex) => {
-              const pointFontSize = calculateFontSize(point);
               pptxSlide.addText(point, {
-                fontSize: pointFontSize,
+                fontSize: standardPointFontSize,
                 color: "#000000",
                 bullet: { type: 'bullet' },
                 x: 4,
@@ -524,7 +528,7 @@ export const generatePresentation = async (data: PresentationData): Promise<Blob
                   y: 1.8,
                   w: 3,
                   h: 3.5,
-                  sizing: { type: "contain", w: 3, h: 3.5 }
+                  sizing: { type: "cover", w: 3, h: 3.5 } // Use "cover" to frame the image
                 });
                 console.log(`Added image for slide ${index}, layout: IMAGE_LEFT`);
               } catch (error) {
@@ -574,7 +578,7 @@ export const generatePresentation = async (data: PresentationData): Promise<Blob
                   y: 0.5,
                   w: '100%',
                   h: '95%',
-                  sizing: { type: "cover", w: "100%", h: "100%" }
+                  sizing: { type: "cover", w: "100%", h: "100%" } // Explicitly set width and height for cover
                 });
                 console.log(`Added background image for slide ${index}`);
                 
@@ -620,11 +624,10 @@ export const generatePresentation = async (data: PresentationData): Promise<Blob
               });
             }
             
-            // Text overlay with dynamic font sizing
+            // Text overlay with standardized font size
             slide.points.forEach((point, pointIndex) => {
-              const pointFontSize = calculateFontSize(point);
               pptxSlide.addText(point, {
-                fontSize: pointFontSize,
+                fontSize: standardPointFontSize,
                 color: "#000000",
                 bullet: { type: 'bullet' },
                 x: 1.5,
@@ -637,11 +640,10 @@ export const generatePresentation = async (data: PresentationData): Promise<Blob
             
           case SlideLayout.TEXT_ONLY:
           default:
-            // Default text-only layout with dynamic font sizing
+            // Default text-only layout with standardized font size
             slide.points.forEach((point, pointIndex) => {
-              const pointFontSize = calculateFontSize(point);
               pptxSlide.addText(point, {
-                fontSize: pointFontSize,
+                fontSize: standardPointFontSize,
                 color: "#000000",
                 bullet: { type: 'bullet' },
                 x: 0.5,
