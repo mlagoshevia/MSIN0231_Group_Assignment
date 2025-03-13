@@ -337,7 +337,7 @@ export const generatePresentation = async (data: PresentationData): Promise<Blob
       // Footer
       { rect: { x: 0, y: '95%', w: '100%', h: 0.3, fill: { color: colors.primary } } },
       // Footer text
-      { text: { text: "UCL Presentation Generator", x: 0.5, y: '95%', fontSize: 8, color: "#FFFFFF", align: 'left' } }
+      { text: { text: "UCL Presentation Generator", x: 0.5, y: '95%', w: 5, h: 0.3, fontSize: 8, color: "#FFFFFF", align: 'left' } }
     ]
   });
   
@@ -372,7 +372,6 @@ export const generatePresentation = async (data: PresentationData): Promise<Blob
       // Title slide
       pptxSlide.addText(slide.title, {
         y: 1.5,
-        x: 1.0,
         w: '80%', 
         h: 1.5, 
         fontSize: 44, 
@@ -388,7 +387,6 @@ export const generatePresentation = async (data: PresentationData): Promise<Blob
       slide.points.forEach((point, pointIndex) => {
         pptxSlide.addText(point, {
           y: 3 + pointIndex * 0.7, // Increased spacing between points
-          x: 1.0,
           w: '80%',
           h: 0.6, // Added height constraint
           fontSize: 20,
@@ -403,7 +401,6 @@ export const generatePresentation = async (data: PresentationData): Promise<Blob
       // UCL branding on title slide
       pptxSlide.addText("University College London", {
         y: 5.5, // Moved down to avoid overlap
-        x: 1.0,
         w: '80%',
         h: 0.5, // Added height constraint
         fontSize: 14,
