@@ -279,15 +279,17 @@ const generateSlides = async (data: PresentationData): Promise<SlideContent[]> =
 const getTemplateColors = (template: string): { primary: string; secondary: string; text: string } => {
   switch (template) {
     case "purple":
-      return { primary: "#8A1538", secondary: "#E8E3E7", text: "#000000" }; // UCL Purple
+      return { primary: "#500778", secondary: "#E8E3E7", text: "#000000" }; // UCL Vibrant Purple
     case "dark":
-      return { primary: "#1D1D1D", secondary: "#333333", text: "#FFFFFF" }; // Dark theme
+      return { primary: "#002248", secondary: "#333333", text: "#FFFFFF" }; // UCL Dark Blue
     case "light":
       return { primary: "#F5F5F5", secondary: "#E0E0E0", text: "#000000" }; // Light theme
     case "green":
-      return { primary: "#006637", secondary: "#E8F4EB", text: "#000000" }; // UCL Green
+      return { primary: "#52C152", secondary: "#E8F4EB", text: "#000000" }; // UCL Vibrant Green
+    case "blue":
+      return { primary: "#34C6C6", secondary: "#E0F5F5", text: "#000000" }; // UCL Vibrant Blue
     default:
-      return { primary: "#8A1538", secondary: "#E8E3E7", text: "#000000" }; // Default to UCL Purple
+      return { primary: "#500778", secondary: "#E8E3E7", text: "#000000" }; // Default to UCL Purple
   }
 };
 
@@ -317,7 +319,7 @@ export const generatePresentation = async (data: PresentationData): Promise<Blob
         { rect: { x: 0, y: 0, w: '100%', h: 0.5, fill: { color: colors.primary } } },
         // Footer
         { rect: { x: 0, y: '95%', w: '100%', h: 0.3, fill: { color: colors.primary } } },
-        { text: { text: "UCL Presentation Generator", x: 0.5, y: 6.7, w: 4, h: 0.3, color: "#FFFFFF", fontFace: "Arial", fontSize: 8 } }
+        { text: { text: "UCL Presentation Generator", y: 6.7, w: 4, h: 0.3, color: "#FFFFFF", fontFace: "Arial", fontSize: 8 } }
       ]
     });
     
@@ -403,8 +405,8 @@ export const generatePresentation = async (data: PresentationData): Promise<Blob
       // Add UCL logo to top left of every slide (LAST action as requested)
       pptxSlide.addImage({
         path: UCL_LOGO,
-        x: 0.3,
-        y: 0.3,
+        x: 0,
+        y: 0,
         w: 1,
         h: 0.4,
         sizing: { type: "contain", w: 1, h: 0.4 }
