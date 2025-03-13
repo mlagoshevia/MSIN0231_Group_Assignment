@@ -7,7 +7,7 @@ const Index = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-ucl-light via-white to-ucl-green">
       {/* Logo centered at top */}
-      <div className="w-full py-3 px-4 flex justify-center bg-black">
+      <div className="w-full py-3 px-4 flex justify-center">
         <img 
           src="/lovable-uploads/443f9a9f-bf35-4ad6-8987-021b3e0d695b.png" 
           alt="UCL Logo" 
