@@ -9,7 +9,7 @@ const Index = () => {
       {/* Logo centered at top */}
       <div className="w-full py-3 px-4 flex justify-center">
         <img 
-          src="/lovable-uploads/c2323a50-fb1c-437a-8482-980488b23cf7.png" 
+          src="/lovable-uploads/6b904904-4b1e-445c-bc68-c2e676f71f8e.png" 
           alt="UCL Logo" 
           className="h-16"
         />
