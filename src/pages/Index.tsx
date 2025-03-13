@@ -8,7 +8,7 @@ const Index = () => {
   const backgroundColors = [
     "from-[#C6B0BC] via-[#C6B0BC]/40 to-[#C6B0BC]/20", // Light purple
     "from-[#DAD6CA] via-[#DAD6CA]/40 to-[#DAD6CA]/20", // Beige
-    "from-[#B6DCE5] via-[#B6DCE5]/40 to-[#B6DCE5]/20", // Light blue
+    "from-[#DEB8C3] via-[#DEB8C3]/40 to-[#DEB8C3]/20", // Pink (replaced light blue)
   ];
 
   // State to hold the selected background color
