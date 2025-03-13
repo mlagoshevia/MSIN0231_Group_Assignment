@@ -1,15 +1,15 @@
 
 import pptxgen from "pptxgenjs";
-import jspdf from "jspdf";
 
 // Define presentation data types
 export interface PresentationData {
   title: string;
-  keyPoints: string[]; // Changed from bulletPoints to keyPoints array
+  keyPoints: string[];
   audience: string;
   purpose: string;
   template: string;
   apiKey?: string; // Optional Gemini API key
+  includeImages: boolean; // New setting for image inclusion
 }
 
 interface SlideContent {
@@ -22,7 +22,7 @@ interface GeminiResponse {
   slides: SlideContent[];
 }
 
-// UCL campus images
+// UCL campus images - excluding the logo
 const UCL_IMAGES = [
   "public/lovable-uploads/acda080f-a4c5-4cfe-bec2-ea5bd50a72a9.png",
   "public/lovable-uploads/6b83f318-76b7-404a-83ca-9f60be513eb0.png",
@@ -36,16 +36,15 @@ const UCL_IMAGES = [
   "public/lovable-uploads/acac0ed1-4db7-4b9d-a7ed-4ef3e795d0fc.png",
   "public/lovable-uploads/aade0ccc-38eb-42d1-b595-9ca4ea4d9984.png",
   "public/lovable-uploads/d626aca5-5787-4ae5-90e4-08aa2f9f1156.png",
-  "public/lovable-uploads/6b904904-4b1e-445c-bc68-c2e676f71f8e.png",
-  "public/lovable-uploads/702c3a84-29b0-4240-848a-6ea26b3efe60.png"
+  "public/lovable-uploads/6b904904-4b1e-445c-bc68-c2e676f71f8e.png"
 ];
 
-// UCL logo (last image in the list)
+// UCL logo (separate from random images)
 const UCL_LOGO = "public/lovable-uploads/702c3a84-29b0-4240-848a-6ea26b3efe60.png";
 
 // Get a random image from the UCL images collection
 const getRandomImage = (): string => {
-  const randomIndex = Math.floor(Math.random() * (UCL_IMAGES.length - 1)); // Exclude the last image (UCL logo)
+  const randomIndex = Math.floor(Math.random() * UCL_IMAGES.length);
   return UCL_IMAGES[randomIndex];
 };
 
@@ -149,11 +148,13 @@ const enhanceContentWithGemini = async (data: PresentationData): Promise<SlideCo
     // Parse the JSON response
     const geminiResponse = JSON.parse(jsonMatch[0]) as GeminiResponse;
     
-    // Process the slides to add images
-    const slides = geminiResponse.slides.map((slide, index) => ({
-      ...slide,
-      image: getRandomImage()
-    }));
+    // Process the slides to add images if enabled
+    const slides = geminiResponse.slides.map((slide) => {
+      if (data.includeImages) {
+        return { ...slide, image: getRandomImage() };
+      }
+      return slide;
+    });
     
     return slides;
   } catch (error) {
@@ -174,35 +175,53 @@ const enhanceContentWithLocalAI = (data: PresentationData): SlideContent[] => {
   const purpose = data.purpose;
   
   // Introductory slide with AI-enhanced content
-  slides.push({
+  const introSlide = {
     title: data.title,
     points: [
       `Welcome to this presentation designed for ${audience}`,
       `Purpose: ${purpose}`,
       `This presentation covers ${userPoints.length} key points`
-    ],
-    image: getRandomImage()
-  });
+    ]
+  };
+  
+  // Add image if enabled
+  if (data.includeImages) {
+    introSlide.image = getRandomImage();
+  }
+  
+  slides.push(introSlide);
 
   // Process each user key point into a content-rich slide
-  userPoints.forEach((point, index) => {
+  userPoints.forEach((point) => {
     // Generate AI-enhanced content based on the bullet point
     const enhancedPoints = generateEnhancedPoints(point, audience, purpose);
     
-    slides.push({
+    const slide: SlideContent = {
       title: point,
-      points: enhancedPoints,
-      image: getRandomImage()
-    });
+      points: enhancedPoints
+    };
+    
+    // Add image if enabled
+    if (data.includeImages) {
+      slide.image = getRandomImage();
+    }
+    
+    slides.push(slide);
   });
 
   // Add summary slide
   const summaryPoints = generateSummaryPoints(userPoints, audience, purpose);
-  slides.push({
+  const summarySlide: SlideContent = {
     title: "Summary",
-    points: summaryPoints,
-    image: getRandomImage()
-  });
+    points: summaryPoints
+  };
+  
+  // Add image if enabled
+  if (data.includeImages) {
+    summarySlide.image = getRandomImage();
+  }
+  
+  slides.push(summarySlide);
   
   return slides;
 };
@@ -311,8 +330,8 @@ export const generatePresentation = async (data: PresentationData): Promise<Blob
       { rect: { x: 0, y: 0, w: '100%', h: 0.5, fill: { color: colors.primary } } },
       // Footer
       { rect: { x: 0, y: '95%', w: '100%', h: 0.3, fill: { color: colors.primary } } },
-      // Footer text - corrected to use proper positioning
-      { text: { text: "UCL Presentation Generator", x: 0.5, y: '95%', fontSize: 8, color: "#FFFFFF" } }
+      // Footer text
+      { text: { text: "UCL Presentation Generator", y: '95%', fontSize: 8, color: "#FFFFFF", align: 'left', margin: [0.5, 0, 0, 0] } }
     ]
   });
   
@@ -323,22 +342,21 @@ export const generatePresentation = async (data: PresentationData): Promise<Blob
     // Add UCL logo to top left of every slide - maintain aspect ratio
     pptxSlide.addImage({
       path: UCL_LOGO,
-      x: 0.3,
-      y: 0.3,
-      w: 1,
+      y: 0.05,
       h: 0.4,
-      sizing: { type: "contain", w: 1, h: 0.4 } // Properly maintain aspect ratio
+      w: 1.0,
+      sizing: { type: "contain", h: 0.4 }
     });
     
-    // Add background image for visual interest (semi-transparent)
-    if (slide.image) {
+    // Add background image for visual interest (semi-transparent) if images are enabled
+    if (data.includeImages && slide.image) {
       pptxSlide.addImage({
         path: slide.image,
-        x: 0,
         y: 0,
+        x: 0,
         w: '100%',
         h: '100%',
-        sizing: { type: "cover", w: '100%', h: '100%' }, // Properly maintain aspect ratio
+        sizing: { type: "cover" },
         transparency: 85 // 85% transparent
       });
     }
@@ -346,7 +364,6 @@ export const generatePresentation = async (data: PresentationData): Promise<Blob
     if (index === 0) {
       // Title slide
       pptxSlide.addText(slide.title, {
-        x: 1,
         y: 1.5,
         w: '80%', 
         h: 1.5, 
@@ -354,63 +371,63 @@ export const generatePresentation = async (data: PresentationData): Promise<Blob
         color: colors.primary, 
         bold: true, 
         align: 'center',
-        wrap: true,
+        valign: 'middle',
+        margin: [0, 0, 0, 0],
         fit: 'shrink'
       });
       
       // Purpose and audience
       slide.points.forEach((point, pointIndex) => {
         pptxSlide.addText(point, {
-          x: 1,
           y: 3 + pointIndex * 0.7, // Increased spacing between points
           w: '80%',
-          h: 0.5, // Added height constraint
+          h: 0.6, // Added height constraint
           fontSize: 20,
           color: colors.text === "#FFFFFF" ? "#FFFFFF" : colors.primary,
           align: 'center',
-          wrap: true,
+          valign: 'middle', 
+          margin: [0, 0, 0, 0],
           fit: 'shrink'
         });
       });
       
       // UCL branding on title slide
       pptxSlide.addText("University College London", {
-        x: 1,
         y: 5.5, // Moved down to avoid overlap
         w: '80%',
         h: 0.5, // Added height constraint
         fontSize: 14,
         color: colors.primary,
         align: 'center',
-        wrap: true
+        margin: [0, 0, 0, 0]
       });
     } else {
       // Content slides
       pptxSlide.addText(slide.title, {
-        x: 0.5,
         y: 0.8,
         w: '95%',
         h: 0.8, // Added height constraint
         fontSize: 32,
         color: colors.text === "#FFFFFF" ? "#FFFFFF" : colors.primary,
         bold: true,
-        wrap: true,
+        align: 'left',
+        margin: [0.5, 0, 0, 0],
         fit: 'shrink'
       });
       
       // Add bullet points with proper spacing to avoid overlap
       slide.points.forEach((point, pointIndex) => {
         pptxSlide.addText(point, {
-          x: 0.5,
           y: 1.8 + pointIndex * 0.8, // Increased spacing between points
           w: '90%',
           h: 0.7, // Added height constraint
           fontSize: 18,
           color: colors.text,
           bullet: { type: 'bullet' },
-          wrap: true,
-          fit: 'shrink',
-          margin: [0, 0, 0, 0.3] // Added margins to prevent overlap
+          align: 'left',
+          valign: 'top',
+          margin: [0.5, 0, 0, 0],
+          fit: 'shrink'
         });
       });
     }
@@ -418,120 +435,20 @@ export const generatePresentation = async (data: PresentationData): Promise<Blob
     // Add slide number to footer (except title slide)
     if (index > 0) {
       pptxSlide.addText(`Slide ${index}/${slides.length - 1}`, {
-        x: 'right',
-        y: 'bottom',
+        x: pptx.presLayout.width - 1.5,
+        y: pptx.presLayout.height - 0.5,
         w: 1.5,
         h: 0.2,
         fontSize: 8,
         color: "#FFFFFF",
         align: 'right',
-        margin: [0, 0.3, 0, 0] // Added margin to position correctly
+        margin: [0, 0.3, 0, 0]
       });
     }
   });
   
   // Generate the PowerPoint as a Blob
   return await pptx.write({ outputType: 'blob' }) as Blob;
-};
-
-/**
- * Generate a PDF version of the presentation
- */
-export const generatePDF = async (data: PresentationData): Promise<Blob> => {
-  const slides = await generateSlides(data);
-  const colors = getTemplateColors(data.template);
-  
-  // Create new PDF document
-  const pdf = new jspdf({
-    orientation: 'landscape',
-    unit: 'mm',
-    format: 'a4'
-  });
-  
-  const pageWidth = pdf.internal.pageSize.getWidth();
-  const pageHeight = pdf.internal.pageSize.getHeight();
-  const margin = 10;
-  const contentWidth = pageWidth - (margin * 2);
-  const contentHeight = pageHeight - (margin * 2);
-  
-  // Generate each slide as a PDF page
-  slides.forEach((slide, index) => {
-    // Add a new page for each slide except the first one
-    if (index > 0) {
-      pdf.addPage();
-    }
-    
-    // Add colored header
-    pdf.setFillColor(colors.primary);
-    pdf.rect(0, 0, pageWidth, 15, 'F');
-    
-    // Add colored footer
-    pdf.setFillColor(colors.primary);
-    pdf.rect(0, pageHeight - 10, pageWidth, 10, 'F');
-    
-    // Add UCL logo
-    try {
-      pdf.addImage(UCL_LOGO, 'PNG', margin, 2, 30, 12, undefined, 'FAST');
-    } catch (e) {
-      console.error("Error adding UCL logo to PDF:", e);
-    }
-    
-    // Set text color based on template
-    pdf.setTextColor(colors.text === "#FFFFFF" ? 255 : 0);
-    
-    if (index === 0) {
-      // Title slide
-      pdf.setFontSize(28);
-      pdf.setFont('helvetica', 'bold');
-      
-      // Add title with text wrapping
-      const titleLines = pdf.splitTextToSize(slide.title, contentWidth - 20);
-      pdf.text(titleLines, pageWidth / 2, 60, { align: 'center' });
-      
-      // Add points
-      pdf.setFontSize(16);
-      pdf.setFont('helvetica', 'normal');
-      let yPos = 80;
-      
-      slide.points.forEach((point) => {
-        const pointLines = pdf.splitTextToSize(point, contentWidth - 40);
-        pdf.text(pointLines, pageWidth / 2, yPos, { align: 'center' });
-        yPos += 10 * (pointLines.length + 1);
-      });
-      
-      // Add UCL branding
-      pdf.setFontSize(14);
-      pdf.text("University College London", pageWidth / 2, pageHeight - 20, { align: 'center' });
-    } else {
-      // Content slides
-      // Add slide title
-      pdf.setFontSize(24);
-      pdf.setFont('helvetica', 'bold');
-      const titleLines = pdf.splitTextToSize(slide.title, contentWidth - 20);
-      pdf.text(titleLines, margin + 10, margin + 20);
-      
-      // Add bullet points
-      pdf.setFontSize(14);
-      pdf.setFont('helvetica', 'normal');
-      let yPos = margin + 20 + (titleLines.length * 10);
-      
-      slide.points.forEach((point, i) => {
-        yPos += 10;
-        const bulletLines = pdf.splitTextToSize("• " + point, contentWidth - 30);
-        pdf.text(bulletLines, margin + 15, yPos);
-        yPos += 6 * bulletLines.length;
-      });
-      
-      // Add slide number
-      pdf.setFontSize(10);
-      pdf.setTextColor(255, 255, 255);
-      pdf.text(`Slide ${index}/${slides.length - 1}`, pageWidth - margin - 10, pageHeight - 5, { align: 'right' });
-    }
-  });
-  
-  // Convert to blob
-  const pdfBlob = pdf.output('blob');
-  return pdfBlob;
 };
 
 /**
@@ -547,18 +464,3 @@ export const downloadPresentation = (blob: Blob, filename: string): void => {
   document.body.removeChild(link);
   URL.revokeObjectURL(url);
 };
-
-/**
- * Trigger download of the PDF
- */
-export const downloadPDF = (blob: Blob, filename: string): void => {
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement("a");
-  link.href = url;
-  link.download = filename.endsWith(".pdf") ? filename : `${filename}.pdf`;
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
-  URL.revokeObjectURL(url);
-};
-
