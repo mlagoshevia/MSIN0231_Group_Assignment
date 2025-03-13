@@ -1,4 +1,3 @@
-
 import React, { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -35,6 +34,10 @@ import {
   SlideLayout, 
   KeyPoint 
 } from "@/utils/presentationGenerator";
+
+interface PresentationFormProps {
+  colorTheme?: string;
+}
 
 const AUDIENCE_OPTIONS = [
   "Students",
@@ -84,7 +87,7 @@ const SLIDE_LAYOUT_OPTIONS = [
   },
 ];
 
-const PresentationForm = () => {
+const PresentationForm = ({ colorTheme = "#500778" }: PresentationFormProps) => {
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [presentationBlob, setPresentationBlob] = useState<Blob | null>(null);
@@ -308,8 +311,8 @@ const PresentationForm = () => {
       <Card className="p-6 backdrop-blur-sm bg-white/50">
         <div className="space-y-4">
           <div className="flex items-center gap-2 pb-2 border-b border-purple-100">
-            <Sparkles className="text-ucl-purple h-5 w-5" />
-            <h2 className="text-lg font-medium text-ucl-purple">AI-Powered Presentation Generator</h2>
+            <Sparkles className={`h-5 w-5`} style={{ color: colorTheme }} />
+            <h2 className="text-lg font-medium" style={{ color: colorTheme }}>AI-Powered Presentation Generator</h2>
           </div>
           
           <div>
@@ -641,7 +644,8 @@ const PresentationForm = () => {
         <div className="mt-6 space-y-4">
           <Button
             type="submit"
-            className="w-full bg-ucl-purple hover:bg-ucl-purple/90 text-white"
+            className="w-full text-white"
+            style={{ backgroundColor: colorTheme, borderColor: colorTheme }}
             disabled={!isFormValid() || loading || generatingAI}
           >
             {loading ? (

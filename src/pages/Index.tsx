@@ -17,7 +17,7 @@ const Index = () => {
   const [textColor, setTextColor] = useState("text-ucl-dark");
   
   // Accent color for purple text elements
-  const [accentColor, setAccentColor] = useState("");
+  const [accentColor, setAccentColor] = useState("#500778");
   
   // Store the random color index
   const [colorIndex, setColorIndex] = useState(0);
@@ -53,7 +53,8 @@ const Index = () => {
       <div className="p-4 max-w-4xl mx-auto">
         <div className="flex flex-col items-center mb-8 animate-slide-up">
           <div className="text-center">
-            <div className={`inline-flex items-center px-3 py-1 bg-[${accentColor}]/10 text-[${accentColor}] rounded-full text-sm mb-3`}>
+            <div style={{ backgroundColor: `${accentColor}10`, color: accentColor }} 
+                className="inline-flex items-center px-3 py-1 rounded-full text-sm mb-3">
               <Sparkles className="h-3.5 w-3.5 mr-1" />
               <span>AI-Powered UCL Presentation Generator</span>
             </div>
