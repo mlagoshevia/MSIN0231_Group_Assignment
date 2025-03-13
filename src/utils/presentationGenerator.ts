@@ -9,7 +9,7 @@ export interface PresentationData {
   purpose: string;
   template: string;
   apiKey?: string; // Optional Gemini API key
-  includeImages: boolean; // New setting for image inclusion
+  slideImages: boolean[]; // Array of booleans for images per slide
 }
 
 interface SlideContent {
@@ -148,21 +148,35 @@ const enhanceContentWithGemini = async (data: PresentationData): Promise<SlideCo
     // Parse the JSON response
     const geminiResponse = JSON.parse(jsonMatch[0]) as GeminiResponse;
     
-    // Process the slides to add images if enabled
-    const slides = geminiResponse.slides.map((slide) => {
-      if (data.includeImages) {
-        return { ...slide, image: getRandomImage() };
-      }
-      return slide;
-    });
-    
-    return slides;
+    // Process the slides - add images only for the title slide and the slides where images are enabled
+    return processSlideImagesPerSlide(geminiResponse.slides, data.slideImages);
   } catch (error) {
     console.error("Error using Gemini API:", error);
     console.log("Falling back to local enhancement");
     // Fallback to local enhancement if Gemini API fails
     return enhanceContentWithLocalAI(data);
   }
+};
+
+/**
+ * Process slides to add images based on per-slide settings
+ */
+const processSlideImagesPerSlide = (slides: SlideContent[], slideImages: boolean[]): SlideContent[] => {
+  // Process the slides and add images where enabled
+  return slides.map((slide, index) => {
+    // Always add image to title slide (index 0) and summary slide (last slide)
+    const isSpecialSlide = index === 0 || index === slides.length - 1;
+    
+    // Get the corresponding slideImages setting (offset by 1 since slideImages doesn't include title slide)
+    const shouldAddImage = isSpecialSlide || 
+      (index > 0 && index < slides.length - 1 && slideImages[index - 1]);
+    
+    if (shouldAddImage) {
+      return { ...slide, image: getRandomImage() };
+    }
+    
+    return slide;
+  });
 };
 
 /**
@@ -175,24 +189,20 @@ const enhanceContentWithLocalAI = (data: PresentationData): SlideContent[] => {
   const purpose = data.purpose;
   
   // Introductory slide with AI-enhanced content
-  const introSlide = {
+  const introSlide: SlideContent = {
     title: data.title,
     points: [
       `Welcome to this presentation designed for ${audience}`,
       `Purpose: ${purpose}`,
       `This presentation covers ${userPoints.length} key points`
-    ]
+    ],
+    image: getRandomImage() // Title slide always gets an image
   };
-  
-  // Add image if enabled
-  if (data.includeImages) {
-    introSlide.image = getRandomImage();
-  }
   
   slides.push(introSlide);
 
   // Process each user key point into a content-rich slide
-  userPoints.forEach((point) => {
+  userPoints.forEach((point, index) => {
     // Generate AI-enhanced content based on the bullet point
     const enhancedPoints = generateEnhancedPoints(point, audience, purpose);
     
@@ -201,8 +211,8 @@ const enhanceContentWithLocalAI = (data: PresentationData): SlideContent[] => {
       points: enhancedPoints
     };
     
-    // Add image if enabled
-    if (data.includeImages) {
+    // Add image only if enabled for this slide
+    if (data.slideImages[index]) {
       slide.image = getRandomImage();
     }
     
@@ -213,13 +223,9 @@ const enhanceContentWithLocalAI = (data: PresentationData): SlideContent[] => {
   const summaryPoints = generateSummaryPoints(userPoints, audience, purpose);
   const summarySlide: SlideContent = {
     title: "Summary",
-    points: summaryPoints
+    points: summaryPoints,
+    image: getRandomImage() // Summary slide always gets an image
   };
-  
-  // Add image if enabled
-  if (data.includeImages) {
-    summarySlide.image = getRandomImage();
-  }
   
   slides.push(summarySlide);
   
@@ -331,7 +337,7 @@ export const generatePresentation = async (data: PresentationData): Promise<Blob
       // Footer
       { rect: { x: 0, y: '95%', w: '100%', h: 0.3, fill: { color: colors.primary } } },
       // Footer text
-      { text: { text: "UCL Presentation Generator", y: '95%', fontSize: 8, color: "#FFFFFF", align: 'left', margin: [0.5, 0, 0, 0] } }
+      { text: { text: "UCL Presentation Generator", x: 0.5, y: '95%', fontSize: 8, color: "#FFFFFF", align: 'left' } }
     ]
   });
   
@@ -339,24 +345,25 @@ export const generatePresentation = async (data: PresentationData): Promise<Blob
   slides.forEach((slide, index) => {
     const pptxSlide = pptx.addSlide({ masterName: "UCL_MASTER" });
     
-    // Add UCL logo to top left of every slide - maintain aspect ratio
+    // Add UCL logo to top left of every slide with proper sizing
     pptxSlide.addImage({
       path: UCL_LOGO,
       y: 0.05,
+      x: 0.05,
       h: 0.4,
       w: 1.0,
-      sizing: { type: "contain", h: 0.4 }
+      sizing: { type: "contain", w: 1.0, h: 0.4 }
     });
     
-    // Add background image for visual interest (semi-transparent) if images are enabled
-    if (data.includeImages && slide.image) {
+    // Add background image for visual interest if this slide has an image
+    if (slide.image) {
       pptxSlide.addImage({
         path: slide.image,
         y: 0,
         x: 0,
         w: '100%',
         h: '100%',
-        sizing: { type: "cover" },
+        sizing: { type: "cover", w: '100%', h: '100%' },
         transparency: 85 // 85% transparent
       });
     }
@@ -365,6 +372,7 @@ export const generatePresentation = async (data: PresentationData): Promise<Blob
       // Title slide
       pptxSlide.addText(slide.title, {
         y: 1.5,
+        x: 1.0,
         w: '80%', 
         h: 1.5, 
         fontSize: 44, 
@@ -380,6 +388,7 @@ export const generatePresentation = async (data: PresentationData): Promise<Blob
       slide.points.forEach((point, pointIndex) => {
         pptxSlide.addText(point, {
           y: 3 + pointIndex * 0.7, // Increased spacing between points
+          x: 1.0,
           w: '80%',
           h: 0.6, // Added height constraint
           fontSize: 20,
@@ -394,6 +403,7 @@ export const generatePresentation = async (data: PresentationData): Promise<Blob
       // UCL branding on title slide
       pptxSlide.addText("University College London", {
         y: 5.5, // Moved down to avoid overlap
+        x: 1.0,
         w: '80%',
         h: 0.5, // Added height constraint
         fontSize: 14,
@@ -405,6 +415,7 @@ export const generatePresentation = async (data: PresentationData): Promise<Blob
       // Content slides
       pptxSlide.addText(slide.title, {
         y: 0.8,
+        x: 0.5,
         w: '95%',
         h: 0.8, // Added height constraint
         fontSize: 32,
@@ -419,6 +430,7 @@ export const generatePresentation = async (data: PresentationData): Promise<Blob
       slide.points.forEach((point, pointIndex) => {
         pptxSlide.addText(point, {
           y: 1.8 + pointIndex * 0.8, // Increased spacing between points
+          x: 0.5,
           w: '90%',
           h: 0.7, // Added height constraint
           fontSize: 18,

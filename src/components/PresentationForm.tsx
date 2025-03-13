@@ -58,15 +58,22 @@ const PresentationForm = () => {
     purpose: "",
     template: "",
     apiKey: "",
-    includeImages: true, // New setting for image inclusion
+    slideImages: [] as boolean[], // Track image inclusion for each slide individually
   });
 
   const addKeyPoint = () => {
     if (newKeyPoint.trim() === "") return;
     
+    // Add the new key point
+    const updatedKeyPoints = [...formData.keyPoints, newKeyPoint.trim()];
+    
+    // Also add a new entry to slideImages array (default to true for each new slide)
+    const updatedSlideImages = [...formData.slideImages, true];
+    
     setFormData({
       ...formData,
-      keyPoints: [...formData.keyPoints, newKeyPoint.trim()]
+      keyPoints: updatedKeyPoints,
+      slideImages: updatedSlideImages
     });
     setNewKeyPoint("");
     
@@ -79,9 +86,15 @@ const PresentationForm = () => {
   const removeKeyPoint = (index: number) => {
     const updatedKeyPoints = [...formData.keyPoints];
     updatedKeyPoints.splice(index, 1);
+    
+    // Also remove the corresponding entry from slideImages
+    const updatedSlideImages = [...formData.slideImages];
+    updatedSlideImages.splice(index, 1);
+    
     setFormData({
       ...formData,
-      keyPoints: updatedKeyPoints
+      keyPoints: updatedKeyPoints,
+      slideImages: updatedSlideImages
     });
   };
 
@@ -94,14 +107,35 @@ const PresentationForm = () => {
     }
     
     const newIndex = direction === 'up' ? index - 1 : index + 1;
+    
+    // Move both the key point and its corresponding image setting
     const updatedKeyPoints = [...formData.keyPoints];
-    const temp = updatedKeyPoints[index];
+    const updatedSlideImages = [...formData.slideImages];
+    
+    // Swap key points
+    const tempPoint = updatedKeyPoints[index];
     updatedKeyPoints[index] = updatedKeyPoints[newIndex];
-    updatedKeyPoints[newIndex] = temp;
+    updatedKeyPoints[newIndex] = tempPoint;
+    
+    // Swap image settings
+    const tempImage = updatedSlideImages[index];
+    updatedSlideImages[index] = updatedSlideImages[newIndex];
+    updatedSlideImages[newIndex] = tempImage;
     
     setFormData({
       ...formData,
-      keyPoints: updatedKeyPoints
+      keyPoints: updatedKeyPoints,
+      slideImages: updatedSlideImages
+    });
+  };
+
+  const toggleSlideImage = (index: number) => {
+    const updatedSlideImages = [...formData.slideImages];
+    updatedSlideImages[index] = !updatedSlideImages[index];
+    
+    setFormData({
+      ...formData,
+      slideImages: updatedSlideImages
     });
   };
 
@@ -239,6 +273,19 @@ const PresentationForm = () => {
                     </div>
                   </div>
                   
+                  {/* Image toggle for each slide */}
+                  <div className="flex items-center mr-2">
+                    <Switch
+                      id={`slide-image-${index}`}
+                      checked={formData.slideImages[index] || false}
+                      onCheckedChange={() => toggleSlideImage(index)}
+                      className="mr-2"
+                    />
+                    <Label htmlFor={`slide-image-${index}`} className="flex items-center gap-1 cursor-pointer">
+                      <Image className="h-3.5 w-3.5" />
+                    </Label>
+                  </div>
+                  
                   <Button 
                     type="button" 
                     size="icon" 
@@ -284,7 +331,7 @@ const PresentationForm = () => {
             </div>
             
             <p className="text-xs text-gray-500 mt-1">
-              Each key point will become its own slide. Gemini AI will enhance each point with research and data.
+              Each key point will become its own slide. Toggle the image icon to include an image for each slide.
             </p>
           </div>
 
@@ -349,20 +396,6 @@ const PresentationForm = () => {
               className="mt-1"
               placeholder="Describe the purpose of your presentation"
             />
-          </div>
-
-          <div className="flex items-center space-x-2">
-            <Switch
-              id="includeImages"
-              checked={formData.includeImages}
-              onCheckedChange={(checked) =>
-                setFormData({ ...formData, includeImages: checked })
-              }
-            />
-            <Label htmlFor="includeImages" className="flex items-center gap-1">
-              <Image className="h-3.5 w-3.5" />
-              Include images in slides
-            </Label>
           </div>
 
           <div className="relative">
