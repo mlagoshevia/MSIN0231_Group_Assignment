@@ -3,31 +3,31 @@ import React, { useEffect, useState } from "react";
 import PresentationForm from "@/components/PresentationForm";
 import { Sparkles } from "lucide-react";
 
-// UCL color palettes based on official guidelines
+// UCL color palettes based on provided color definitions
 const UCL_COLOR_PALETTES = [
-  // Primary palette
+  // Primary vibrant palette
   {
-    light: "#E8E3E7",    // Light Purple
-    main: "#8F3F97",     // UCL Purple
-    dark: "#1A1F2C",     // Dark Blue
-    green: "#006637",    // UCL Green
-    bg: "from-[#E8E3E7] via-white to-[#E8F4EB]"
+    light: "#C6B0BC",    // Muted Purple
+    main: "#500778",     // Vibrant Purple
+    dark: "#2C0442",     // Dark Purple
+    accent: "#52C152",   // Vibrant Green
+    bg: "from-[#C6B0BC] via-white to-[#C9D1A8]"
   },
-  // Secondary palette with blue
+  // Blue palette
   {
-    light: "#E5F7FD",    // Light Blue
-    main: "#00AEEF",     // UCL Blue
-    dark: "#1A1F2C",     // Dark Blue
-    green: "#7ABB3B",    // Bright Green
-    bg: "from-[#E5F7FD] via-white to-[#EFF9E4]"
+    light: "#B6DCE5",    // Muted Blue
+    main: "#34C6C6",     // Vibrant Blue
+    dark: "#002248",     // Dark Blue
+    accent: "#FFCA36",   // Vibrant Yellow
+    bg: "from-[#B6DCE5] via-white to-[#DAD6CA]"
   },
-  // Tertiary palette with pink
+  // Pink palette
   {
-    light: "#FFEDF4",    // Light Pink
-    main: "#EE2E74",     // UCL Pink
-    dark: "#1A1F2C",     // Dark Blue
-    green: "#FFD100",    // UCL Yellow
-    bg: "from-[#FFEDF4] via-white to-[#FFFAE5]"
+    light: "#DEB8C3",    // Muted Pink
+    main: "#AC145A",     // Vibrant Pink
+    dark: "#4B0A42",     // Dark Pink
+    accent: "#34C6C6",   // Vibrant Blue
+    bg: "from-[#DEB8C3] via-white to-[#B6DCE5]"
   }
 ];
 
@@ -38,12 +38,6 @@ const Index = () => {
   useEffect(() => {
     const randomIndex = Math.floor(Math.random() * UCL_COLOR_PALETTES.length);
     setColorPalette(UCL_COLOR_PALETTES[randomIndex]);
-    
-    // Apply the selected color palette to CSS variables
-    document.documentElement.style.setProperty('--ucl-purple', colorPalette.main);
-    document.documentElement.style.setProperty('--ucl-dark', colorPalette.dark);
-    document.documentElement.style.setProperty('--ucl-light', colorPalette.light);
-    document.documentElement.style.setProperty('--ucl-green', colorPalette.green);
   }, []);
 
   return (
@@ -58,12 +52,12 @@ const Index = () => {
         </div>
         
         <div className="text-center mb-8 animate-slide-up">
-          <div className="inline-flex items-center px-3 py-1 bg-ucl-purple/10 text-ucl-purple rounded-full text-sm mb-3">
+          <div className="inline-flex items-center px-3 py-1" style={{ backgroundColor: `${colorPalette.main}20`, color: colorPalette.main }} className="rounded-full text-sm mb-3">
             <Sparkles className="h-3.5 w-3.5 mr-1" />
-            <span>AI-Powered UCL Presentation Generator</span>
+            <span>UCL Presentation Generator</span>
           </div>
-          <h1 className="text-4xl font-bold text-ucl-dark mb-2">
-            Create Intelligent Presentations
+          <h1 className="text-4xl font-bold mb-2" style={{ color: colorPalette.dark }}>
+            Create Professional Presentations
           </h1>
           <p className="text-gray-600 max-w-lg mx-auto">
             Transform your bullet points into professionally designed, content-rich presentations. 

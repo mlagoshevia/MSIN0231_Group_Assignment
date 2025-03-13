@@ -21,13 +21,11 @@ import {
   Plus, 
   Trash2,
   Move,
-  Image
 } from "lucide-react";
 import { 
   generatePresentation, 
   downloadPresentation 
 } from "@/utils/presentationGenerator";
-import { Switch } from "@/components/ui/switch";
 
 const AUDIENCE_OPTIONS = [
   "Students",
@@ -58,7 +56,6 @@ const PresentationForm = () => {
     purpose: "",
     template: "",
     apiKey: "",
-    slideImages: [] as boolean[], // Track image inclusion for each slide individually
   });
 
   const addKeyPoint = () => {
@@ -67,13 +64,9 @@ const PresentationForm = () => {
     // Add the new key point
     const updatedKeyPoints = [...formData.keyPoints, newKeyPoint.trim()];
     
-    // Also add a new entry to slideImages array (default to true for each new slide)
-    const updatedSlideImages = [...formData.slideImages, true];
-    
     setFormData({
       ...formData,
       keyPoints: updatedKeyPoints,
-      slideImages: updatedSlideImages
     });
     setNewKeyPoint("");
     
@@ -87,14 +80,9 @@ const PresentationForm = () => {
     const updatedKeyPoints = [...formData.keyPoints];
     updatedKeyPoints.splice(index, 1);
     
-    // Also remove the corresponding entry from slideImages
-    const updatedSlideImages = [...formData.slideImages];
-    updatedSlideImages.splice(index, 1);
-    
     setFormData({
       ...formData,
       keyPoints: updatedKeyPoints,
-      slideImages: updatedSlideImages
     });
   };
 
@@ -108,34 +96,15 @@ const PresentationForm = () => {
     
     const newIndex = direction === 'up' ? index - 1 : index + 1;
     
-    // Move both the key point and its corresponding image setting
+    // Move key points
     const updatedKeyPoints = [...formData.keyPoints];
-    const updatedSlideImages = [...formData.slideImages];
-    
-    // Swap key points
     const tempPoint = updatedKeyPoints[index];
     updatedKeyPoints[index] = updatedKeyPoints[newIndex];
     updatedKeyPoints[newIndex] = tempPoint;
     
-    // Swap image settings
-    const tempImage = updatedSlideImages[index];
-    updatedSlideImages[index] = updatedSlideImages[newIndex];
-    updatedSlideImages[newIndex] = tempImage;
-    
     setFormData({
       ...formData,
       keyPoints: updatedKeyPoints,
-      slideImages: updatedSlideImages
-    });
-  };
-
-  const toggleSlideImage = (index: number) => {
-    const updatedSlideImages = [...formData.slideImages];
-    updatedSlideImages[index] = !updatedSlideImages[index];
-    
-    setFormData({
-      ...formData,
-      slideImages: updatedSlideImages
     });
   };
 
@@ -162,7 +131,12 @@ const PresentationForm = () => {
       // Generate the presentation with Gemini-enhanced content
       const pptxBlob = await generatePresentation(formData);
       
-      setPresentationBlob(pptxBlob);
+      // Ensure we're setting a Blob
+      if (pptxBlob instanceof Blob) {
+        setPresentationBlob(pptxBlob);
+      } else {
+        throw new Error("Failed to generate presentation: Invalid output format");
+      }
       
       // Show success toast
       toast({
@@ -211,7 +185,7 @@ const PresentationForm = () => {
         <div className="space-y-4">
           <div className="flex items-center gap-2 pb-2 border-b border-purple-100">
             <Sparkles className="text-ucl-purple h-5 w-5" />
-            <h2 className="text-lg font-medium text-ucl-purple">AI-Powered Presentation Generator</h2>
+            <h2 className="text-lg font-medium text-ucl-purple">UCL Presentation Generator</h2>
           </div>
           
           <div>
@@ -273,19 +247,6 @@ const PresentationForm = () => {
                     </div>
                   </div>
                   
-                  {/* Image toggle for each slide */}
-                  <div className="flex items-center mr-2">
-                    <Switch
-                      id={`slide-image-${index}`}
-                      checked={formData.slideImages[index] || false}
-                      onCheckedChange={() => toggleSlideImage(index)}
-                      className="mr-2"
-                    />
-                    <Label htmlFor={`slide-image-${index}`} className="flex items-center gap-1 cursor-pointer">
-                      <Image className="h-3.5 w-3.5" />
-                    </Label>
-                  </div>
-                  
                   <Button 
                     type="button" 
                     size="icon" 
@@ -331,7 +292,7 @@ const PresentationForm = () => {
             </div>
             
             <p className="text-xs text-gray-500 mt-1">
-              Each key point will become its own slide. Toggle the image icon to include an image for each slide.
+              Each key point will become its own slide with randomly selected images.
             </p>
           </div>
 
@@ -449,7 +410,7 @@ const PresentationForm = () => {
             ) : (
               <>
                 <Sparkles className="mr-2 h-4 w-4" />
-                Generate AI-Powered Presentation
+                Generate Presentation
               </>
             )}
           </Button>

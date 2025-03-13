@@ -27,15 +27,23 @@ export default {
         foreground: "hsl(var(--foreground))",
         ucl: {
           // UCL official colors
-          purple: "#8F3F97",       // UCL Purple
-          dark: "#1A1F2C",         // Dark Blue
-          light: "#E8E3E7",        // Light Purple
-          green: "#006637",        // UCL Green
-          blue: "#00AEEF",         // UCL Blue
-          brightgreen: "#7ABB3B",  // Bright Green
-          pink: "#EE2E74",         // UCL Pink
-          yellow: "#FFD100",       // UCL Yellow
-          coolred: "#D50032",      // UCL Red
+          purple: "#500778",       // Purple / Vibrant
+          darkpurple: "#2C0442",   // Purple / Dark 
+          mutedpurple: "#C6B0BC",  // Purple / Muted
+          green: "#52C152",        // Green / Vibrant
+          darkgreen: "#113B3A",    // Green / Dark
+          mutedgreen: "#C9D1A8",   // Green / Muted
+          blue: "#34C6C6",         // Blue / Vibrant
+          darkblue: "#002248",     // Blue / Dark
+          mutedblue: "#B6DCE5",    // Blue / Muted
+          yellow: "#FFCA36",       // Yellow / Vibrant
+          darkyellow: "#504D48",   // Yellow / Dark
+          mutedyellow: "#DAD6CA",  // Yellow / Muted
+          pink: "#AC145A",         // Pink / Vibrant
+          darkpink: "#4B0A42",     // Pink / Dark
+          mutedpink: "#DEB8C3",    // Pink / Muted
+          black: "#000000",        // Black
+          white: "#FFFFFF",        // White
         },
         primary: {
           DEFAULT: "hsl(var(--primary))",
