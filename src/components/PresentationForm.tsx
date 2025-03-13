@@ -1,5 +1,4 @@
-
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import {
@@ -26,7 +25,8 @@ import {
   Layout,
   AlignLeft,
   AlignRight,
-  Image
+  Image,
+  Upload
 } from "lucide-react";
 import { 
   generatePresentation, 
@@ -34,8 +34,6 @@ import {
   SlideLayout, 
   KeyPoint 
 } from "@/utils/presentationGenerator";
-import { Switch } from "@/components/ui/switch";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 
 const AUDIENCE_OPTIONS = [
   "Students",
@@ -59,25 +57,29 @@ const SLIDE_LAYOUT_OPTIONS = [
     value: SlideLayout.TEXT_ONLY, 
     label: "Text Only", 
     icon: <AlignLeft className="h-4 w-4 mr-2" />,
-    description: "Standard slide with bullet points"
+    description: "Standard slide with bullet points",
+    hasImage: false
   },
   { 
     value: SlideLayout.IMAGE_RIGHT, 
     label: "Image Right", 
     icon: <AlignRight className="h-4 w-4 mr-2" />,
-    description: "Text on left, image placeholder on right"
+    description: "Text on left, image placeholder on right",
+    hasImage: true
   },
   { 
     value: SlideLayout.IMAGE_LEFT, 
     label: "Image Left", 
     icon: <AlignLeft className="h-4 w-4 mr-2" />,
-    description: "Image placeholder on left, text on right"
+    description: "Image placeholder on left, text on right",
+    hasImage: true
   },
   { 
     value: SlideLayout.IMAGE_BACKGROUND, 
     label: "Background Image", 
     icon: <Image className="h-4 w-4 mr-2" />,
-    description: "Text overlay on background image"
+    description: "Text overlay on background image",
+    hasImage: true
   },
 ];
 
@@ -89,6 +91,7 @@ const PresentationForm = () => {
   const [showApiKey, setShowApiKey] = useState(false);
   const [newKeyPoint, setNewKeyPoint] = useState("");
   const [newSlideLayout, setNewSlideLayout] = useState<SlideLayout>(SlideLayout.TEXT_ONLY);
+  const fileInputRefs = useRef<{[key: number]: HTMLInputElement | null}>({});
   const [formData, setFormData] = useState({
     title: "",
     keyPoints: [] as KeyPoint[],
@@ -96,7 +99,7 @@ const PresentationForm = () => {
     purpose: "",
     template: "",
     apiKey: "",
-    includeSummarySlide: true,
+    includeSummarySlide: false,
   });
 
   const addKeyPoint = () => {
@@ -108,7 +111,8 @@ const PresentationForm = () => {
         ...formData.keyPoints, 
         {
           content: newKeyPoint.trim(),
-          layout: newSlideLayout
+          layout: newSlideLayout,
+          imageFile: null
         }
       ]
     });
@@ -151,9 +155,12 @@ const PresentationForm = () => {
 
   const updateSlideLayout = (index: number, layout: SlideLayout) => {
     const updatedKeyPoints = [...formData.keyPoints];
+    const hasImage = SLIDE_LAYOUT_OPTIONS.find(option => option.value === layout)?.hasImage;
+    
     updatedKeyPoints[index] = {
       ...updatedKeyPoints[index],
-      layout
+      layout,
+      imageFile: hasImage ? updatedKeyPoints[index].imageFile : null
     };
     
     setFormData({
@@ -164,6 +171,73 @@ const PresentationForm = () => {
     toast({
       title: "Slide layout updated",
       description: `Changed to ${SLIDE_LAYOUT_OPTIONS.find(option => option.value === layout)?.label} layout.`
+    });
+  };
+
+  const handleImageUpload = (index: number, event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    
+    if (!file.type.startsWith('image/')) {
+      toast({
+        title: "Invalid file type",
+        description: "Please upload an image file (JPG, PNG, etc.)",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    if (file.size > 5 * 1024 * 1024) {
+      toast({
+        title: "File too large",
+        description: "Image must be less than 5MB",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    const updatedKeyPoints = [...formData.keyPoints];
+    updatedKeyPoints[index] = {
+      ...updatedKeyPoints[index],
+      imageFile: file
+    };
+    
+    setFormData({
+      ...formData,
+      keyPoints: updatedKeyPoints
+    });
+    
+    toast({
+      title: "Image uploaded",
+      description: `Image added to slide ${index + 1}`
+    });
+  };
+
+  const triggerImageUpload = (index: number) => {
+    if (fileInputRefs.current[index]) {
+      fileInputRefs.current[index]?.click();
+    }
+  };
+
+  const removeImage = (index: number) => {
+    const updatedKeyPoints = [...formData.keyPoints];
+    updatedKeyPoints[index] = {
+      ...updatedKeyPoints[index],
+      imageFile: null
+    };
+    
+    setFormData({
+      ...formData,
+      keyPoints: updatedKeyPoints
+    });
+    
+    if (fileInputRefs.current[index]) {
+      (fileInputRefs.current[index] as HTMLInputElement).value = '';
+    }
+    
+    toast({
+      title: "Image removed",
+      description: `Image removed from slide ${index + 1}`
     });
   };
 
@@ -328,7 +402,6 @@ const PresentationForm = () => {
                     </Button>
                   </div>
                   
-                  {/* Slide Layout Options */}
                   <div className="mt-1 ml-6 bg-white p-2 rounded border border-gray-100">
                     <div className="text-xs font-medium text-gray-500 mb-2 flex items-center">
                       <Layout className="h-3 w-3 mr-1" /> Slide Layout:
@@ -354,6 +427,53 @@ const PresentationForm = () => {
                         </label>
                       ))}
                     </div>
+                    
+                    {SLIDE_LAYOUT_OPTIONS.find(opt => opt.value === point.layout)?.hasImage && (
+                      <div className="mt-2 border-t border-gray-100 pt-2">
+                        <input
+                          type="file"
+                          accept="image/*"
+                          className="hidden"
+                          ref={el => fileInputRefs.current[index] = el}
+                          onChange={(e) => handleImageUpload(index, e)}
+                        />
+                        
+                        {point.imageFile ? (
+                          <div className="flex flex-col items-center space-y-2">
+                            <div className="relative w-full max-w-xs mx-auto">
+                              <img 
+                                src={URL.createObjectURL(point.imageFile)}
+                                alt={`Slide ${index + 1} image`}
+                                className="h-24 object-contain mx-auto rounded"
+                              />
+                              <Button
+                                type="button"
+                                size="sm"
+                                variant="destructive"
+                                className="absolute top-0 right-0 h-6 w-6 p-0"
+                                onClick={() => removeImage(index)}
+                              >
+                                <Trash2 className="h-3 w-3" />
+                              </Button>
+                            </div>
+                            <div className="text-xs text-gray-500">
+                              {point.imageFile.name} ({Math.round(point.imageFile.size / 1024)}KB)
+                            </div>
+                          </div>
+                        ) : (
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            className="w-full text-xs"
+                            onClick={() => triggerImageUpload(index)}
+                          >
+                            <Upload className="h-3 w-3 mr-1" />
+                            Upload Image for Slide {index + 1}
+                          </Button>
+                        )}
+                      </div>
+                    )}
                   </div>
                 </div>
               ))}
@@ -474,21 +594,6 @@ const PresentationForm = () => {
                   ))}
                 </SelectContent>
               </Select>
-            </div>
-          </div>
-
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-2">
-              <Switch
-                id="includeSummary"
-                checked={formData.includeSummarySlide}
-                onCheckedChange={(checked) =>
-                  setFormData({ ...formData, includeSummarySlide: checked })
-                }
-              />
-              <Label htmlFor="includeSummary" className="text-sm">
-                Include AI-generated summary slide
-              </Label>
             </div>
           </div>
 

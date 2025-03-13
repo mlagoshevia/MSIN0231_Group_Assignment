@@ -1,10 +1,9 @@
-
 import pptxgen from "pptxgenjs";
 
 // Define presentation data types
 export interface PresentationData {
   title: string;
-  keyPoints: KeyPoint[]; // Changed from string[] to KeyPoint[]
+  keyPoints: KeyPoint[];
   audience: string;
   purpose: string;
   template: string;
@@ -15,6 +14,7 @@ export interface PresentationData {
 export interface KeyPoint {
   content: string;
   layout: SlideLayout;
+  imageFile?: File | null; // Optional image file for slides with images
 }
 
 export enum SlideLayout {
@@ -312,6 +312,47 @@ const getTemplateColors = (template: string): { primary: string; secondary: stri
 };
 
 /**
+ * Calculate appropriate font size based on text length
+ */
+const calculateFontSize = (text: string, isTitle: boolean = false): number => {
+  const baseSize = isTitle ? 32 : 18;
+  const length = text.length;
+  
+  // Title font size scaling
+  if (isTitle) {
+    if (length > 50) return 24;
+    if (length > 30) return 28;
+    return baseSize;
+  }
+  
+  // Content text font size scaling
+  if (length > 200) return 12;
+  if (length > 100) return 14;
+  if (length > 70) return 16;
+  return baseSize;
+};
+
+/**
+ * Convert a File object to base64 for pptxgenjs
+ */
+const fileToBase64 = (file: File): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = () => {
+      if (typeof reader.result === 'string') {
+        // Remove the data URL prefix (e.g., "data:image/jpeg;base64,")
+        const base64 = reader.result.split(',')[1];
+        resolve(base64);
+      } else {
+        reject(new Error('Failed to convert file to base64'));
+      }
+    };
+    reader.onerror = error => reject(error);
+  });
+};
+
+/**
  * Generate a PowerPoint presentation with UCL branding
  */
 export const generatePresentation = async (data: PresentationData): Promise<Blob> => {
@@ -341,13 +382,15 @@ export const generatePresentation = async (data: PresentationData): Promise<Blob
     });
     
     // Generate each slide
-    slides.forEach((slide, index) => {
+    for (const [index, slide] of slides.entries()) {
       const pptxSlide = pptx.addSlide({ masterName: "UCL_MASTER" });
       
       if (index === 0) {
-        // Title slide
+        // Title slide - use dynamic font size
+        const titleFontSize = calculateFontSize(slide.title, true);
+        
         pptxSlide.addText(slide.title, {
-          fontSize: 44, 
+          fontSize: titleFontSize, 
           color: colors.primary, 
           bold: true, 
           align: 'center',
@@ -359,8 +402,9 @@ export const generatePresentation = async (data: PresentationData): Promise<Blob
         
         // Purpose and audience - make subtitle text black by default
         slide.points.forEach((point, pointIndex) => {
+          const pointFontSize = calculateFontSize(point);
           pptxSlide.addText(point, {
-            fontSize: 20,
+            fontSize: pointFontSize,
             color: "#000000", // Set to black by default
             align: 'center',
             x: 1,
@@ -370,9 +414,11 @@ export const generatePresentation = async (data: PresentationData): Promise<Blob
           });
         });
       } else {
-        // Content slides - Title should use the template color
+        // Content slides - Title should use the template color and dynamic font size
+        const titleFontSize = calculateFontSize(slide.title, true);
+        
         pptxSlide.addText(slide.title, {
-          fontSize: 32,
+          fontSize: titleFontSize,
           color: colors.primary,
           bold: true,
           x: 0.5,
@@ -382,15 +428,20 @@ export const generatePresentation = async (data: PresentationData): Promise<Blob
         });
         
         // Get the layout for this slide
-        const layoutType = index <= data.keyPoints.length ? data.keyPoints[index-1]?.layout : SlideLayout.TEXT_ONLY;
+        const keyPointIndex = index <= data.keyPoints.length ? index-1 : -1;
+        const layoutType = keyPointIndex >= 0 ? data.keyPoints[keyPointIndex]?.layout : SlideLayout.TEXT_ONLY;
+        const keyPoint = keyPointIndex >= 0 ? data.keyPoints[keyPointIndex] : null;
+        const hasUploadedImage = keyPoint?.imageFile !== undefined && keyPoint?.imageFile !== null;
         
         // Apply different layouts based on the slide type
         switch(layoutType) {
           case SlideLayout.IMAGE_RIGHT:
-            // Text on left (70%), image placeholder on right (30%)
+            // Text on left (70%), image on right (30%)
+            // Add dynamic font sizing for text
             slide.points.forEach((point, pointIndex) => {
+              const pointFontSize = calculateFontSize(point);
               pptxSlide.addText(point, {
-                fontSize: 18,
+                fontSize: pointFontSize,
                 color: "#000000",
                 bullet: { type: 'bullet' },
                 x: 0.5,
@@ -400,32 +451,47 @@ export const generatePresentation = async (data: PresentationData): Promise<Blob
               });
             });
             
-            // Add image placeholder on right
-            pptxSlide.addShape('rect', {
-              x: 6.5,
-              y: 1.8,
-              w: 3,
-              h: 3.5,
-              fill: { color: 'F1F1F1' },
-              line: { color: 'DDDDDD', width: 1 }
-            });
-            
-            pptxSlide.addText("Image", {
-              x: 6.5,
-              y: 3,
-              w: 3,
-              h: 0.5,
-              align: 'center',
-              color: '888888',
-              fontSize: 14
-            });
+            // Add image on right
+            if (hasUploadedImage && keyPoint.imageFile) {
+              // Use the uploaded image
+              const base64Image = await fileToBase64(keyPoint.imageFile);
+              pptxSlide.addImage({
+                data: `base64://${base64Image}`,
+                x: 6.5,
+                y: 1.8,
+                w: 3,
+                h: 3.5,
+                sizing: { type: "contain", w: 3, h: 3.5 }
+              });
+            } else {
+              // Add placeholder
+              pptxSlide.addShape('rect', {
+                x: 6.5,
+                y: 1.8,
+                w: 3,
+                h: 3.5,
+                fill: { color: 'F1F1F1' },
+                line: { color: 'DDDDDD', width: 1 }
+              });
+              
+              pptxSlide.addText("Image", {
+                x: 6.5,
+                y: 3,
+                w: 3,
+                h: 0.5,
+                align: 'center',
+                color: '888888',
+                fontSize: 14
+              });
+            }
             break;
             
           case SlideLayout.IMAGE_LEFT:
-            // Image placeholder on left (30%), text on right (70%)
+            // Image on left (30%), text on right (70%)
             slide.points.forEach((point, pointIndex) => {
+              const pointFontSize = calculateFontSize(point);
               pptxSlide.addText(point, {
-                fontSize: 18,
+                fontSize: pointFontSize,
                 color: "#000000",
                 bullet: { type: 'bullet' },
                 x: 4,
@@ -435,25 +501,39 @@ export const generatePresentation = async (data: PresentationData): Promise<Blob
               });
             });
             
-            // Add image placeholder on left
-            pptxSlide.addShape('rect', {
-              x: 0.5,
-              y: 1.8,
-              w: 3,
-              h: 3.5,
-              fill: { color: 'F1F1F1' },
-              line: { color: 'DDDDDD', width: 1 }
-            });
-            
-            pptxSlide.addText("Image", {
-              x: 0.5,
-              y: 3,
-              w: 3,
-              h: 0.5,
-              align: 'center',
-              color: '888888',
-              fontSize: 14
-            });
+            // Add image on left
+            if (hasUploadedImage && keyPoint.imageFile) {
+              // Use the uploaded image
+              const base64Image = await fileToBase64(keyPoint.imageFile);
+              pptxSlide.addImage({
+                data: `base64://${base64Image}`,
+                x: 0.5,
+                y: 1.8,
+                w: 3,
+                h: 3.5,
+                sizing: { type: "contain", w: 3, h: 3.5 }
+              });
+            } else {
+              // Add placeholder
+              pptxSlide.addShape('rect', {
+                x: 0.5,
+                y: 1.8,
+                w: 3,
+                h: 3.5,
+                fill: { color: 'F1F1F1' },
+                line: { color: 'DDDDDD', width: 1 }
+              });
+              
+              pptxSlide.addText("Image", {
+                x: 0.5,
+                y: 3,
+                w: 3,
+                h: 0.5,
+                align: 'center',
+                color: '888888',
+                fontSize: 14
+              });
+            }
             break;
             
           case SlideLayout.IMAGE_BACKGROUND:
@@ -466,30 +546,54 @@ export const generatePresentation = async (data: PresentationData): Promise<Blob
               fill: { color: colors.secondary, transparency: 0.7 }
             });
             
-            // Image placeholder in background
-            pptxSlide.addShape('rect', {
-              x: 0.5,
-              y: 1,
-              w: 9,
-              h: 5,
-              fill: { color: 'F1F1F1' },
-              line: { color: 'DDDDDD', width: 1 }
-            });
+            // Background image
+            if (hasUploadedImage && keyPoint.imageFile) {
+              // Use the uploaded image as background
+              const base64Image = await fileToBase64(keyPoint.imageFile);
+              pptxSlide.addImage({
+                data: `base64://${base64Image}`,
+                x: 0,
+                y: 0.5,
+                w: '100%',
+                h: '95%',
+                sizing: { type: "cover" }
+              });
+              
+              // Add semi-transparent overlay for better text readability
+              pptxSlide.addShape('rect', {
+                x: 0,
+                y: 0.5,
+                w: '100%',
+                h: '95%',
+                fill: { color: colors.secondary, transparency: 0.7 }
+              });
+            } else {
+              // Image placeholder
+              pptxSlide.addShape('rect', {
+                x: 0.5,
+                y: 1,
+                w: 9,
+                h: 5,
+                fill: { color: 'F1F1F1' },
+                line: { color: 'DDDDDD', width: 1 }
+              });
+              
+              pptxSlide.addText("Background Image", {
+                x: 3,
+                y: 3,
+                w: 4,
+                h: 0.5,
+                align: 'center',
+                color: '888888',
+                fontSize: 14
+              });
+            }
             
-            pptxSlide.addText("Background Image", {
-              x: 3,
-              y: 3,
-              w: 4,
-              h: 0.5,
-              align: 'center',
-              color: '888888',
-              fontSize: 14
-            });
-            
-            // Text overlay centered
+            // Text overlay with dynamic font sizing
             slide.points.forEach((point, pointIndex) => {
+              const pointFontSize = calculateFontSize(point);
               pptxSlide.addText(point, {
-                fontSize: 18,
+                fontSize: pointFontSize,
                 color: "#000000",
                 bullet: { type: 'bullet' },
                 x: 1.5,
@@ -502,10 +606,11 @@ export const generatePresentation = async (data: PresentationData): Promise<Blob
             
           case SlideLayout.TEXT_ONLY:
           default:
-            // Default text-only layout
+            // Default text-only layout with dynamic font sizing
             slide.points.forEach((point, pointIndex) => {
+              const pointFontSize = calculateFontSize(point);
               pptxSlide.addText(point, {
-                fontSize: 18,
+                fontSize: pointFontSize,
                 color: "#000000",
                 bullet: { type: 'bullet' },
                 x: 0.5,
@@ -541,7 +646,7 @@ export const generatePresentation = async (data: PresentationData): Promise<Blob
         h: 0.5,
         sizing: { type: "contain", w: 1.7, h: 0.5 }
       });
-    });
+    }
     
     // Generate the PowerPoint as a Blob
     return await pptx.write({ outputType: 'blob' }) as Blob;
