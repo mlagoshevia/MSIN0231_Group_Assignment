@@ -597,30 +597,46 @@ export const generatePresentation = async (data: PresentationData): Promise<Blob
             // Background image with transparent overlay
             if (hasUploadedImage && keyPoint?.imageFile) {
               try {
-                // 1. First set the background with the uploaded image
+                // 1. First, store the image data for later use
                 const imageData = await fileToBase64(keyPoint.imageFile);
-                pptxSlide.background = { 
-                  data: imageData
-                };
                 
-                // 2. Add a white semi-transparent overlay for better readability
-                // The transparency is set to 0.85 (85% transparent)
-                // This goes between the background image and the text
+                // 2. Set the background color to match the template
+                // This ensures consistent appearance even before the image loads
+                pptxSlide.background = { color: colors.secondary };
+                
+                // 3. Add the image as background
+                pptxSlide.background = { data: imageData };
+                
+                // 4. Add the semi-transparent overlay shape
+                // This must be added AFTER setting the background
+                // Make it smaller than the slide to not cover header/footer
                 pptxSlide.addShape('rect', {
                   x: 0,
-                  y: 0.5, // Start below the header bar
+                  y: 0.5, // Start below the header
                   w: '100%',
-                  h: '94.5%', // End before the footer bar
-                  fill: { color: "FFFFFF", transparency: 0.85 }
+                  h: '94.5%', // End above the footer
+                  fill: { color: "FFFFFF", transparency: 85 } // Note: pptxgenjs uses 0-100 scale for transparency
                 });
                 
-                console.log(`Added background image for slide ${index} with 85% transparent overlay`);
+                console.log(`Added background image for slide ${index} with transparent overlay`);
               } catch (error) {
                 console.error(`Error adding background image to slide ${index}:`, error);
               }
             }
             
-            // 4. Add text content after the background and overlay
+            // 5. Add slide title AFTER overlay (so it appears on top)
+            const titleFontSize = calculateFontSize(slide.title, true);
+            pptxSlide.addText(slide.title, {
+              fontSize: titleFontSize,
+              color: colors.primary,
+              bold: true,
+              x: 0.5,
+              y: 0.8,
+              w: 9,
+              h: 0.8
+            });
+            
+            // 6. Add text content last to ensure it's on top of everything
             slide.points.forEach((point, pointIndex) => {
               pptxSlide.addText(point, {
                 fontSize: standardPointFontSize,
@@ -698,4 +714,3 @@ export const downloadPresentation = (blob: Blob, filename: string): void => {
   document.body.removeChild(link);
   URL.revokeObjectURL(url);
 };
-
