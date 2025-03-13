@@ -1,3 +1,4 @@
+
 import pptxgen from "pptxgenjs";
 
 // Define presentation data types
@@ -400,7 +401,7 @@ export const generatePresentation = async (data: PresentationData): Promise<Blob
       { rect: { x: 0, y: 0, w: '100%', h: 0.5, fill: { color: colors.primary } } },
       // Footer
       { rect: { x: 0, y: '95%', w: '100%', h: 0.3, fill: { color: colors.primary } } },
-      { text: { text: "UCL Presentation Generator", w: 4, color: "#FFFFFF", fontSize: 8 } }
+      { text: { text: "UCL Presentation Generator", color: "#FFFFFF", fontSize: 8 } }
     ]
   });
   
@@ -467,7 +468,7 @@ export const generatePresentation = async (data: PresentationData): Promise<Blob
   });
   
   // Generate the PowerPoint as a Blob
-  return await pptx.writeFile({ outputType: 'blob' }) as Promise<Blob>;
+  return await pptx.write({ outputType: 'blob' }) as Blob;
 };
 
 /**
