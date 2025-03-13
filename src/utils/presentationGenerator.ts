@@ -1,13 +1,15 @@
+
 import pptxgen from "pptxgenjs";
+import { jsPDF } from "jspdf";
 
 // Define presentation data types
 export interface PresentationData {
   title: string;
-  keyPoints: string[]; // Changed from bulletPoints to keyPoints array
+  keyPoints: string[];
   audience: string;
   purpose: string;
   template: string;
-  apiKey?: string; // Optional Gemini API key
+  apiKey?: string;
 }
 
 interface SlideContent {
@@ -323,7 +325,7 @@ export const generatePresentation = async (data: PresentationData): Promise<Blob
       // Footer
       { rect: { x: 0, y: '95%', w: '100%', h: 0.3, fill: { color: colors.primary } } },
       // Footer text
-      { text: { text: "UCL Presentation Generator", color: "#FFFFFF", size: 8 } }
+      { text: { text: "UCL Presentation Generator", x: 0.5, y: "95%", w: "100%", fontSize: 8, color: "FFFFFF" } }
     ]
   });
   
@@ -428,17 +430,90 @@ export const generatePresentation = async (data: PresentationData): Promise<Blob
   });
   
   // Generate the PowerPoint as a Blob
-  return await pptx.write({ outputType: 'blob' });
+  const pptxBlob = await pptx.write({ outputType: 'blob' }) as Blob;
+  return pptxBlob;
+};
+
+/**
+ * Generate a PDF version of the presentation
+ */
+export const generatePDF = async (data: PresentationData): Promise<Blob> => {
+  const slides = await generateSlides(data);
+  const colors = getTemplateColors(data.template);
+  
+  // Create new PDF document
+  const pdf = new jsPDF({
+    orientation: 'landscape',
+    unit: 'mm',
+    format: 'a4'
+  });
+  
+  const pageWidth = pdf.internal.pageSize.getWidth();
+  const pageHeight = pdf.internal.pageSize.getHeight();
+  const margin = 10;
+  
+  // Generate each slide as a PDF page
+  slides.forEach((slide, index) => {
+    // Add a new page for each slide after the first
+    if (index > 0) {
+      pdf.addPage();
+    }
+    
+    // Set background color
+    pdf.setFillColor(colors.secondary);
+    pdf.rect(0, 0, pageWidth, pageHeight, 'F');
+    
+    // Add header
+    pdf.setFillColor(colors.primary);
+    pdf.rect(0, 0, pageWidth, 15, 'F');
+    
+    // Add footer
+    pdf.setFillColor(colors.primary);
+    pdf.rect(0, pageHeight - 10, pageWidth, 10, 'F');
+    
+    // Add slide title
+    pdf.setTextColor(colors.text === "#FFFFFF" ? "#FFFFFF" : colors.primary);
+    pdf.setFontSize(24);
+    pdf.text(slide.title, pageWidth / 2, margin + 25, { align: 'center' });
+    
+    // Add content
+    pdf.setFontSize(14);
+    const contentY = margin + 40;
+    const lineHeight = 10;
+    
+    slide.points.forEach((point, pointIndex) => {
+      pdf.text(`• ${point}`, margin + 10, contentY + (pointIndex * lineHeight), { 
+        maxWidth: pageWidth - (margin * 4) 
+      });
+    });
+    
+    // Add page number
+    pdf.setTextColor("#FFFFFF");
+    pdf.setFontSize(10);
+    if (index > 0) {
+      pdf.text(`Slide ${index}/${slides.length - 1}`, pageWidth - 20, pageHeight - 5);
+    }
+    
+    // Add "UCL Presentation Generator" text in footer
+    pdf.text("UCL Presentation Generator", 20, pageHeight - 5);
+  });
+  
+  // Generate PDF as blob
+  const pdfBlob = pdf.output('blob');
+  return pdfBlob;
 };
 
 /**
  * Trigger download of the presentation
  */
-export const downloadPresentation = (blob: Blob, filename: string): void => {
+export const downloadPresentation = (blob: Blob, filename: string, format: 'pptx' | 'pdf'): void => {
+  const extension = format === 'pptx' ? '.pptx' : '.pdf';
+  const cleanFilename = filename.endsWith(extension) ? filename : `${filename}${extension}`;
+  
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
   link.href = url;
-  link.download = filename.endsWith(".pptx") ? filename : `${filename}.pptx`;
+  link.download = cleanFilename;
   document.body.appendChild(link);
   link.click();
   document.body.removeChild(link);
