@@ -1,4 +1,3 @@
-
 import pptxgen from "pptxgenjs";
 
 // Define presentation data types
@@ -281,7 +280,7 @@ export const generatePresentation = async (data: PresentationData): Promise<Blob
         { rect: { x: 0, y: 0, w: '100%', h: 0.5, fill: { color: colors.primary } } },
         // Footer
         { rect: { x: 0, y: '95%', w: '100%', h: 0.3, fill: { color: colors.primary } } },
-        { text: { text: "UCL Presentation Generator", x: 0.5, y: '95%', w: 4, h: 0.3, fontSize: 8, color: "#FFFFFF" } }
+        { text: { text: "UCL Presentation Generator", fontSize: 8, color: "#FFFFFF", y: 6.7, x: 0.5, w: 4, h: 0.3 } }
       ]
     });
     
@@ -289,70 +288,74 @@ export const generatePresentation = async (data: PresentationData): Promise<Blob
     slides.forEach((slide, index) => {
       const pptxSlide = pptx.addSlide({ masterName: "UCL_MASTER" });
       
-      // Add UCL logo to top left of every slide
+      // Add UCL logo to top left of every slide (LAST action as requested)
       pptxSlide.addImage({
         path: UCL_LOGO,
         x: 0.3,
         y: 0.3,
         w: 1,
         h: 0.4,
-        sizing: { type: "contain" }
+        sizing: { type: "contain", w: 1, h: 0.4 }
       });
       
       if (index === 0) {
         // Title slide
         pptxSlide.addText(slide.title, {
-          x: 1,
-          y: 1.5,
-          w: '80%', 
-          h: 1.5, 
           fontSize: 44, 
           color: colors.primary, 
           bold: true, 
-          align: 'center'
+          align: 'center',
+          x: 1,
+          y: 1.5,
+          w: 8,
+          h: 1.5
         });
         
         // Purpose and audience
         slide.points.forEach((point, pointIndex) => {
           pptxSlide.addText(point, {
-            x: 1,
-            y: 3 + pointIndex * 0.5,
-            w: '80%',
             fontSize: 20,
             color: colors.text === "#FFFFFF" ? "#FFFFFF" : colors.primary,
-            align: 'center'
+            align: 'center',
+            x: 1,
+            y: 3 + pointIndex * 0.5,
+            w: 8,
+            h: 0.5
           });
         });
         
         // UCL branding on title slide
         pptxSlide.addText("University College London", {
-          x: 1,
-          y: 5,
-          w: '80%',
           fontSize: 14,
           color: colors.primary,
-          align: 'center'
+          align: 'center',
+          x: 1,
+          y: 5,
+          w: 8,
+          h: 0.5
         });
       } else {
         // Content slides
         pptxSlide.addText(slide.title, {
-          x: 0.5,
-          y: 0.8,
-          w: '95%',
           fontSize: 32,
           color: colors.text === "#FFFFFF" ? "#FFFFFF" : colors.primary,
-          bold: true
+          bold: true,
+          x: 0.5,
+          y: 0.8,
+          w: 9,
+          h: 0.8
         });
         
         // Add bullet points
         slide.points.forEach((point, pointIndex) => {
           pptxSlide.addText(point, {
-            x: 0.5,
-            y: 1.8 + pointIndex * 0.7,
-            w: '90%',
             fontSize: 18,
             color: colors.text,
-            bullet: { type: 'bullet' }
+            bullet: { type: 'bullet' },
+            x: 0.5,
+            y: 1.8 + pointIndex * 0.7,
+            w: 9,
+            h: 0.6
           });
         });
       }
@@ -360,12 +363,12 @@ export const generatePresentation = async (data: PresentationData): Promise<Blob
       // Add slide number to footer (except title slide)
       if (index > 0) {
         pptxSlide.addText(`Slide ${index}/${slides.length - 1}`, {
-          x: 'right',
-          y: 'bottom',
-          w: 2,
-          h: 0.3,
           fontSize: 8,
-          color: "#FFFFFF"
+          color: "#FFFFFF",
+          x: 8,
+          y: 6.7,
+          w: 2,
+          h: 0.3
         });
       }
     });
@@ -391,3 +394,4 @@ export const downloadPresentation = (blob: Blob, filename: string): void => {
   document.body.removeChild(link);
   URL.revokeObjectURL(url);
 };
+
