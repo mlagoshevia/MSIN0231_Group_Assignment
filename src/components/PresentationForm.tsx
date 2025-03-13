@@ -16,6 +16,7 @@ import { useToast } from "@/components/ui/use-toast";
 import { 
   Loader2, 
   Download, 
+  FileType,
   Sparkles, 
   Key, 
   Plus, 
@@ -23,7 +24,12 @@ import {
   X,
   Move
 } from "lucide-react";
-import { generatePresentation, downloadPresentation } from "@/utils/presentationGenerator";
+import { 
+  generatePresentation, 
+  downloadPresentation, 
+  generatePDF, 
+  downloadPDF 
+} from "@/utils/presentationGenerator";
 
 const AUDIENCE_OPTIONS = [
   "Students",
@@ -44,6 +50,7 @@ const PresentationForm = () => {
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [presentationBlob, setPresentationBlob] = useState<Blob | null>(null);
+  const [pdfBlob, setPdfBlob] = useState<Blob | null>(null);
   const [generatingAI, setGeneratingAI] = useState(false);
   const [showApiKey, setShowApiKey] = useState(false);
   const [newKeyPoint, setNewKeyPoint] = useState("");
@@ -104,6 +111,7 @@ const PresentationForm = () => {
     e.preventDefault();
     setLoading(true);
     setPresentationBlob(null);
+    setPdfBlob(null);
     
     // Log the form data
     console.log("Form submitted:", { 
@@ -121,20 +129,25 @@ const PresentationForm = () => {
       });
       
       // Generate the presentation with Gemini-enhanced content
-      const pptxBlob = await generatePresentation(formData);
+      const [pptxBlob, pdfDocument] = await Promise.all([
+        generatePresentation(formData),
+        generatePDF(formData)
+      ]);
+      
       setPresentationBlob(pptxBlob);
+      setPdfBlob(pdfDocument);
       
       // Show success toast
       toast({
-        title: "PowerPoint generated!",
-        description: `Your "${formData.title}" presentation has been created with Gemini-enhanced content.`,
+        title: "Presentation generated!",
+        description: `Your "${formData.title}" presentation has been created in both PowerPoint and PDF formats.`,
         duration: 5000,
       });
     } catch (error) {
-      console.error("Error in AI generation:", error);
+      console.error("Error in generation:", error);
       toast({
-        title: "AI generation failed",
-        description: error instanceof Error ? error.message : "There was an error enhancing your content. Please try again.",
+        title: "Generation failed",
+        description: error instanceof Error ? error.message : "There was an error creating your presentation. Please try again.",
         variant: "destructive",
       });
     } finally {
@@ -143,7 +156,7 @@ const PresentationForm = () => {
     }
   };
 
-  const handleDownload = () => {
+  const handleDownloadPPTX = () => {
     if (presentationBlob) {
       const filename = `${formData.title.replace(/\s+/g, '_')}_presentation.pptx`;
       downloadPresentation(presentationBlob, filename);
@@ -151,6 +164,18 @@ const PresentationForm = () => {
       toast({
         title: "Downloading PowerPoint",
         description: "Your PowerPoint presentation is being downloaded.",
+      });
+    }
+  };
+
+  const handleDownloadPDF = () => {
+    if (pdfBlob) {
+      const filename = `${formData.title.replace(/\s+/g, '_')}_presentation.pdf`;
+      downloadPDF(pdfBlob, filename);
+      
+      toast({
+        title: "Downloading PDF",
+        description: "Your PDF presentation is being downloaded.",
       });
     }
   };
@@ -401,15 +426,30 @@ const PresentationForm = () => {
             )}
           </Button>
           
-          {presentationBlob && (
-            <Button 
-              type="button"
-              onClick={handleDownload}
-              className="w-full bg-green-600 hover:bg-green-700 text-white"
-            >
-              <Download className="mr-2 h-4 w-4" />
-              Download Presentation
-            </Button>
+          {(presentationBlob || pdfBlob) && (
+            <div className="flex gap-3">
+              {presentationBlob && (
+                <Button 
+                  type="button"
+                  onClick={handleDownloadPPTX}
+                  className="flex-1 bg-green-600 hover:bg-green-700 text-white"
+                >
+                  <Download className="mr-2 h-4 w-4" />
+                  Download PowerPoint
+                </Button>
+              )}
+              
+              {pdfBlob && (
+                <Button 
+                  type="button"
+                  onClick={handleDownloadPDF}
+                  className="flex-1 bg-blue-600 hover:bg-blue-700 text-white"
+                >
+                  <FileType className="mr-2 h-4 w-4" />
+                  Download PDF
+                </Button>
+              )}
+            </div>
           )}
         </div>
       </Card>
@@ -418,3 +458,4 @@ const PresentationForm = () => {
 };
 
 export default PresentationForm;
+
