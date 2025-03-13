@@ -36,7 +36,6 @@ import {
 } from "@/utils/presentationGenerator";
 import { Switch } from "@/components/ui/switch";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Form, FormControl, FormField, FormItem, FormLabel } from "@/components/ui/form";
 
 const AUDIENCE_OPTIONS = [
   "Students",
@@ -334,26 +333,27 @@ const PresentationForm = () => {
                     <div className="text-xs font-medium text-gray-500 mb-2 flex items-center">
                       <Layout className="h-3 w-3 mr-1" /> Slide Layout:
                     </div>
-                    <RadioGroup 
-                      value={point.layout} 
-                      onValueChange={(value) => updateSlideLayout(index, value as SlideLayout)}
-                      className="flex gap-2 flex-wrap"
-                    >
+                    <div className="flex flex-wrap gap-2">
                       {SLIDE_LAYOUT_OPTIONS.map((option) => (
-                        <FormItem key={option.value} className="flex items-center space-x-1 space-y-0">
-                          <FormControl>
-                            <RadioGroupItem value={option.value} id={`layout-${index}-${option.value}`} />
-                          </FormControl>
-                          <FormLabel 
-                            htmlFor={`layout-${index}-${option.value}`} 
-                            className={`text-xs cursor-pointer flex items-center ${point.layout === option.value ? 'text-ucl-purple font-medium' : 'text-gray-600'}`}
-                          >
+                        <label 
+                          key={option.value} 
+                          className={`flex items-center space-x-1 cursor-pointer text-xs ${point.layout === option.value ? 'text-ucl-purple font-medium' : 'text-gray-600'}`}
+                        >
+                          <input 
+                            type="radio"
+                            name={`slide-layout-${index}`}
+                            value={option.value}
+                            checked={point.layout === option.value}
+                            onChange={() => updateSlideLayout(index, option.value)}
+                            className="sr-only"
+                          />
+                          <div className={`p-1 rounded ${point.layout === option.value ? 'bg-purple-100' : 'hover:bg-gray-100'}`}>
                             {option.icon}
-                            {option.label}
-                          </FormLabel>
-                        </FormItem>
+                            <span>{option.label}</span>
+                          </div>
+                        </label>
                       ))}
-                    </RadioGroup>
+                    </div>
                   </div>
                 </div>
               ))}
@@ -385,26 +385,27 @@ const PresentationForm = () => {
                     <div className="text-xs font-medium text-gray-500 mb-1 flex items-center">
                       <Layout className="h-3 w-3 mr-1" /> Select Slide Layout:
                     </div>
-                    <RadioGroup 
-                      value={newSlideLayout} 
-                      onValueChange={(value) => setNewSlideLayout(value as SlideLayout)}
-                      className="flex gap-2 flex-wrap"
-                    >
+                    <div className="flex flex-wrap gap-2">
                       {SLIDE_LAYOUT_OPTIONS.map((option) => (
-                        <FormItem key={option.value} className="flex items-center space-x-1 space-y-0">
-                          <FormControl>
-                            <RadioGroupItem value={option.value} id={`new-layout-${option.value}`} />
-                          </FormControl>
-                          <FormLabel 
-                            htmlFor={`new-layout-${option.value}`} 
-                            className={`text-xs cursor-pointer flex items-center ${newSlideLayout === option.value ? 'text-ucl-purple font-medium' : 'text-gray-600'}`}
-                          >
+                        <label 
+                          key={option.value} 
+                          className={`flex items-center space-x-1 cursor-pointer text-xs ${newSlideLayout === option.value ? 'text-ucl-purple font-medium' : 'text-gray-600'}`}
+                        >
+                          <input 
+                            type="radio"
+                            name="new-slide-layout"
+                            value={option.value}
+                            checked={newSlideLayout === option.value}
+                            onChange={() => setNewSlideLayout(option.value)}
+                            className="sr-only"
+                          />
+                          <div className={`p-1 rounded ${newSlideLayout === option.value ? 'bg-purple-100' : 'hover:bg-gray-100'}`}>
                             {option.icon}
-                            {option.label}
-                          </FormLabel>
-                        </FormItem>
+                            <span>{option.label}</span>
+                          </div>
+                        </label>
                       ))}
-                    </RadioGroup>
+                    </div>
                     <p className="text-xs text-gray-500 mt-1">
                       {SLIDE_LAYOUT_OPTIONS.find(option => option.value === newSlideLayout)?.description}
                     </p>
