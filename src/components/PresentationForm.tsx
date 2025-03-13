@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -35,9 +34,15 @@ const AUDIENCE_OPTIONS = [
 
 const TEMPLATE_OPTIONS = [
   { name: "UCL Purple", value: "purple" },
+  { name: "UCL Green", value: "green" },
+  { name: "UCL Blue", value: "blue" },
+  { name: "UCL Bright Blue", value: "brightblue" },
+  { name: "UCL Orange", value: "orange" },
+  { name: "UCL Yellow", value: "yellow" },
+  { name: "UCL Pink", value: "pink" },
+  { name: "UCL Red", value: "red" },
   { name: "Dark Theme", value: "dark" },
   { name: "Light Theme", value: "light" },
-  { name: "UCL Green", value: "green" },
 ];
 
 const PresentationForm = () => {
@@ -105,14 +110,12 @@ const PresentationForm = () => {
     setLoading(true);
     setPresentationBlob(null);
     
-    // Log the form data
     console.log("Form submitted:", { 
       ...formData, 
-      apiKey: formData.apiKey ? "********" : "" // Hide API key in logs
+      apiKey: formData.apiKey ? "********" : "" 
     });
     
     try {
-      // Start the AI generation process
       setGeneratingAI(true);
       toast({
         title: "AI is crafting your presentation",
@@ -120,11 +123,9 @@ const PresentationForm = () => {
         duration: 3000,
       });
       
-      // Generate the presentation with Gemini-enhanced content
       const pptxBlob = await generatePresentation(formData);
       setPresentationBlob(pptxBlob);
       
-      // Show success toast
       toast({
         title: "PowerPoint generated!",
         description: `Your "${formData.title}" presentation has been created with Gemini-enhanced content.`,
@@ -171,7 +172,7 @@ const PresentationForm = () => {
         <div className="space-y-4">
           <div className="flex items-center gap-2 pb-2 border-b border-purple-100">
             <Sparkles className="text-ucl-purple h-5 w-5" />
-            <h2 className="text-lg font-medium text-ucl-purple">AI-Powered Presentation Generator</h2>
+            <h2 className="text-lg font-medium text-ucl-purple">AI-Powered UCL Presentation Generator</h2>
           </div>
           
           <div>
@@ -191,13 +192,12 @@ const PresentationForm = () => {
 
           <div>
             <Label className="text-sm font-medium flex justify-between items-center">
-              <span>Key Points (Each will become a slide)</span>
+              <span>Key Points (Each point becomes one slide)</span>
               <span className="text-xs text-gray-500">
                 {formData.keyPoints.length} points added
               </span>
             </Label>
             
-            {/* List of existing key points */}
             <div className="mt-2 space-y-2">
               {formData.keyPoints.map((point, index) => (
                 <div 
@@ -252,7 +252,6 @@ const PresentationForm = () => {
               )}
             </div>
             
-            {/* Add new key point */}
             <div className="mt-2 flex gap-2">
               <Input
                 value={newKeyPoint}
@@ -308,7 +307,7 @@ const PresentationForm = () => {
 
             <div>
               <Label htmlFor="template" className="text-sm font-medium">
-                Template
+                UCL Template
               </Label>
               <Select
                 value={formData.template}
@@ -396,7 +395,7 @@ const PresentationForm = () => {
             ) : (
               <>
                 <Sparkles className="mr-2 h-4 w-4" />
-                Generate AI-Powered Presentation
+                Generate AI-Powered UCL Presentation
               </>
             )}
           </Button>

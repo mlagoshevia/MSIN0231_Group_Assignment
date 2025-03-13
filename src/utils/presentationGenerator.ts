@@ -1,4 +1,3 @@
-
 import pptxgen from "pptxgenjs";
 
 // Define presentation data types
@@ -269,19 +268,32 @@ const generateSlides = async (data: PresentationData): Promise<SlideContent[]> =
 
 /**
  * Get UCL template colors based on selected template
+ * Colors from UCL brand palette: https://www.ucl.ac.uk/brand/brand-essentials/colour-palette
  */
 const getTemplateColors = (template: string): { primary: string; secondary: string; text: string } => {
   switch (template) {
     case "purple":
-      return { primary: "#8A1538", secondary: "#E8E3E7", text: "#000000" }; // UCL Purple
+      return { primary: "#8F1F6B", secondary: "#F6EBF2", text: "#000000" }; // UCL Purple
     case "dark":
-      return { primary: "#1D1D1D", secondary: "#333333", text: "#FFFFFF" }; // Dark theme
+      return { primary: "#0B0C0C", secondary: "#1D1D1D", text: "#FFFFFF" }; // Dark theme
     case "light":
-      return { primary: "#F5F5F5", secondary: "#E0E0E0", text: "#000000" }; // Light theme
+      return { primary: "#FFFFFF", secondary: "#F7F7F7", text: "#000000" }; // Light theme
     case "green":
       return { primary: "#006637", secondary: "#E8F4EB", text: "#000000" }; // UCL Green
+    case "blue":
+      return { primary: "#0096D6", secondary: "#E6F4FB", text: "#000000" }; // UCL Blue
+    case "brightblue":
+      return { primary: "#00AEEF", secondary: "#E6F9FD", text: "#000000" }; // UCL Bright Blue
+    case "orange":
+      return { primary: "#D14700", secondary: "#FAEDE7", text: "#000000" }; // UCL Orange
+    case "yellow":
+      return { primary: "#A99D1C", secondary: "#F8F7E8", text: "#000000" }; // UCL Yellow
+    case "pink":
+      return { primary: "#91005A", secondary: "#F5E6EF", text: "#000000" }; // UCL Pink
+    case "red":
+      return { primary: "#C51918", secondary: "#F9E8E8", text: "#000000" }; // UCL Red
     default:
-      return { primary: "#8A1538", secondary: "#E8E3E7", text: "#000000" }; // Default to UCL Purple
+      return { primary: "#8F1F6B", secondary: "#F6EBF2", text: "#000000" }; // Default to UCL Purple
   }
 };
 
@@ -310,7 +322,8 @@ export const generatePresentation = async (data: PresentationData): Promise<Blob
       { rect: { x: 0, y: 0, w: '100%', h: 0.5, fill: { color: colors.primary } } },
       // Footer
       { rect: { x: 0, y: '95%', w: '100%', h: 0.3, fill: { color: colors.primary } } },
-      { text: { text: "UCL Presentation Generator", fontSize: 8, color: "#FFFFFF" } }
+      // Footer text
+      { text: { text: "UCL Presentation Generator", color: "#FFFFFF", size: 8 } }
     ]
   });
   
@@ -318,16 +331,17 @@ export const generatePresentation = async (data: PresentationData): Promise<Blob
   slides.forEach((slide, index) => {
     const pptxSlide = pptx.addSlide({ masterName: "UCL_MASTER" });
     
-    // Add UCL logo to top left of every slide
+    // Add UCL logo to top left of every slide - maintain aspect ratio
     pptxSlide.addImage({
       path: UCL_LOGO,
       x: 0.3,
-      y: 0.3,
+      y: 0.05,
       w: 1,
-      h: 0.4
+      h: 0.4,
+      sizing: { type: "contain", w: 1, h: 0.4 }
     });
     
-    // Add background image for visual interest (semi-transparent)
+    // Add background image for visual interest (semi-transparent) - maintain aspect ratio
     if (slide.image) {
       pptxSlide.addImage({
         path: slide.image,
@@ -335,6 +349,7 @@ export const generatePresentation = async (data: PresentationData): Promise<Blob
         y: 0,
         w: '100%',
         h: '100%',
+        sizing: { type: "cover", w: '100%', h: '100%' },
         transparency: 85, // 85% transparent
       });
     }
@@ -346,53 +361,57 @@ export const generatePresentation = async (data: PresentationData): Promise<Blob
         y: 1.5,
         w: '80%', 
         h: 1.5, 
-        fontSize: 44, 
-        color: colors.primary, 
-        bold: true, 
-        align: 'center'
+        align: 'center',
+        bold: true,
+        color: colors.primary,
+        fontSize: 44
       });
       
       // Purpose and audience
+      const yPositionIncrement = 0.7; // Increased spacing between text elements
       slide.points.forEach((point, pointIndex) => {
         pptxSlide.addText(point, {
           x: 1,
-          y: 3 + pointIndex * 0.5,
+          y: 3 + pointIndex * yPositionIncrement,
           w: '80%',
-          fontSize: 20,
+          align: 'center',
           color: colors.text === "#FFFFFF" ? "#FFFFFF" : colors.primary,
-          align: 'center'
+          fontSize: 20
         });
       });
       
       // UCL branding on title slide
       pptxSlide.addText("University College London", {
         x: 1,
-        y: 5,
+        y: 5.5,
         w: '80%',
-        fontSize: 14,
+        align: 'center',
         color: colors.primary,
-        align: 'center'
+        fontSize: 14
       });
     } else {
       // Content slides
       pptxSlide.addText(slide.title, {
         x: 0.5,
         y: 0.8,
-        w: '95%',
-        fontSize: 32,
+        w: '90%',
+        bold: true,
         color: colors.text === "#FFFFFF" ? "#FFFFFF" : colors.primary,
-        bold: true
+        fontSize: 32
       });
       
-      // Add bullet points
+      // Add bullet points with increased spacing to prevent overlap
+      const yStartPosition = 1.8;
+      const yPositionIncrement = 0.8; // Increased spacing between points
+      
       slide.points.forEach((point, pointIndex) => {
         pptxSlide.addText(point, {
           x: 0.5,
-          y: 1.8 + pointIndex * 0.7,
+          y: yStartPosition + pointIndex * yPositionIncrement,
           w: '90%',
-          fontSize: 18,
+          bullet: { type: 'bullet' },
           color: colors.text,
-          bullet: { type: 'bullet' }
+          fontSize: 18
         });
       });
     }
@@ -400,16 +419,16 @@ export const generatePresentation = async (data: PresentationData): Promise<Blob
     // Add slide number to footer (except title slide)
     if (index > 0) {
       pptxSlide.addText(`Slide ${index}/${slides.length - 1}`, {
-        x: 'right',
-        y: 'bottom',
-        fontSize: 8,
-        color: "#FFFFFF"
+        x: pptx.presLayout.width - 1.5, // Position from right
+        y: pptx.presLayout.height - 0.5, // Position from bottom
+        color: "#FFFFFF",
+        fontSize: 8
       });
     }
   });
   
   // Generate the PowerPoint as a Blob
-  return await pptx.write({ outputType: 'blob' }) as Blob;
+  return await pptx.write({ outputType: 'blob' });
 };
 
 /**
