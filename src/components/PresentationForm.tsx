@@ -150,7 +150,7 @@ const PresentationForm = () => {
               placeholder="Enter your bullet points (one per line, starting with -)"
             />
             <p className="text-xs text-gray-500 mt-1">
-              Each point should start with a dash (-). Example:<br />
+              Each point should start with a dash (-). The AI will expand on these points with research and data. Example:<br />
               - First important point<br />
               - Second important point
             </p>
@@ -262,7 +262,7 @@ const PresentationForm = () => {
               </Button>
             </div>
             <p className="text-xs text-gray-500 mt-1">
-              Get a Gemini API key from the Google AI Developer Console. If no key is provided, simple AI enhancement will be used.
+              Get a Gemini API key from the Google AI Developer Console. Required for AI-enhanced presentation content.
             </p>
           </div>
         </div>

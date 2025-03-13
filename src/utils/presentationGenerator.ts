@@ -55,7 +55,8 @@ const enhanceContentWithGemini = async (data: PresentationData): Promise<SlideCo
     
     // The structured prompt text
     const promptText = `
-      Create a detailed presentation outline with the following parameters:
+      You are an expert presentation creator. I need you to enhance and expand on these key points to create a detailed presentation. 
+      
       Title: "${data.title}"
       Purpose: "${data.purpose}"
       Target Audience: "${data.audience}"
@@ -65,13 +66,13 @@ const enhanceContentWithGemini = async (data: PresentationData): Promise<SlideCo
       Please generate a presentation with exactly ${data.slideCount} slides, including:
       - Title slide
       - Agenda slide
-      - Content slides based on the key points
+      - Content slides that EXPAND on each key point with research, data, and insights
       - Summary slide
       - Next steps slide
       
       For each slide, provide:
       1. A clear, concise title
-      2. 3-5 bullet points of content
+      2. 3-5 bullet points of content that expand on the key points with additional information
       
       Format the response as valid JSON with this structure:
       {
@@ -479,7 +480,7 @@ export const generatePresentation = async (data: PresentationData): Promise<Blob
   });
   
   // Generate the PowerPoint as a Blob
-  return pptx.writeFile({ outputType: 'blob' }) as unknown as Blob;
+  return await pptx.writeFile({ outputType: 'blob' }) as Promise<Blob>;
 };
 
 /**
