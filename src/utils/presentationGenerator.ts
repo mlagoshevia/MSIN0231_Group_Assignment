@@ -4,32 +4,48 @@ import pptxgen from "pptxgenjs";
 // Define presentation data types
 export interface PresentationData {
   title: string;
-  bulletPoints: string;
+  keyPoints: string[]; // Changed from bulletPoints to keyPoints array
   audience: string;
   purpose: string;
   template: string;
-  slideCount: number;
   apiKey?: string; // Optional Gemini API key
 }
 
 interface SlideContent {
   title: string;
   points: string[];
+  image?: string;
 }
 
 interface GeminiResponse {
   slides: SlideContent[];
 }
 
-/**
- * Parse bullet points from user input
- */
-const parseBulletPoints = (bulletPointsText: string): string[] => {
-  return bulletPointsText
-    .split("\n")
-    .map(line => line.trim())
-    .filter(line => line.startsWith("-"))
-    .map(line => line.substring(1).trim());
+// UCL campus images
+const UCL_IMAGES = [
+  "public/lovable-uploads/acda080f-a4c5-4cfe-bec2-ea5bd50a72a9.png",
+  "public/lovable-uploads/6b83f318-76b7-404a-83ca-9f60be513eb0.png",
+  "public/lovable-uploads/e4b472d5-865e-4cb1-8fec-f80be909c236.png",
+  "public/lovable-uploads/d7b8167b-481f-4054-951f-42e5a4ee01d8.png",
+  "public/lovable-uploads/5938d1c9-574c-44a7-9d45-334cf5ce65ec.png",
+  "public/lovable-uploads/20bba994-fe28-4d19-b7bf-57f9cecc04c5.png",
+  "public/lovable-uploads/91972324-64c1-4c6b-80f7-58d8d483171b.png",
+  "public/lovable-uploads/191fae70-1c3c-4031-9f58-0776a5d9de10.png",
+  "public/lovable-uploads/dc58b3fd-75c7-468e-94be-8dbb433d088d.png",
+  "public/lovable-uploads/acac0ed1-4db7-4b9d-a7ed-4ef3e795d0fc.png",
+  "public/lovable-uploads/aade0ccc-38eb-42d1-b595-9ca4ea4d9984.png",
+  "public/lovable-uploads/d626aca5-5787-4ae5-90e4-08aa2f9f1156.png",
+  "public/lovable-uploads/6b904904-4b1e-445c-bc68-c2e676f71f8e.png",
+  "public/lovable-uploads/702c3a84-29b0-4240-848a-6ea26b3efe60.png"
+];
+
+// UCL logo (last image in the list)
+const UCL_LOGO = "public/lovable-uploads/702c3a84-29b0-4240-848a-6ea26b3efe60.png";
+
+// Get a random image from the UCL images collection
+const getRandomImage = (): string => {
+  const randomIndex = Math.floor(Math.random() * (UCL_IMAGES.length - 1)); // Exclude the last image (UCL logo)
+  return UCL_IMAGES[randomIndex];
 };
 
 /**
@@ -42,15 +58,14 @@ const enhanceContentWithGemini = async (data: PresentationData): Promise<SlideCo
   }
   
   try {
-    const userPoints = parseBulletPoints(data.bulletPoints);
+    const userPoints = data.keyPoints;
     
     // Prepare the prompt for Gemini
     const prompt = {
       title: data.title,
       points: userPoints,
       audience: data.audience,
-      purpose: data.purpose,
-      slideCount: data.slideCount
+      purpose: data.purpose
     };
     
     // The structured prompt text
@@ -61,18 +76,16 @@ const enhanceContentWithGemini = async (data: PresentationData): Promise<SlideCo
       Purpose: "${data.purpose}"
       Target Audience: "${data.audience}"
       Key Points: 
-      ${userPoints.map(point => `- ${point}`).join('\n')}
+      ${userPoints.map((point, index) => `${index + 1}. ${point}`).join('\n')}
       
-      Please generate a presentation with exactly ${data.slideCount} slides, including:
-      - Title slide
-      - Agenda slide
-      - Content slides that EXPAND on each key point with research, data, and insights
-      - Summary slide
-      - Next steps slide
+      Please generate a presentation with exactly ${userPoints.length + 2} slides, including:
+      - 1 Title slide
+      - ${userPoints.length} Content slides - ONE FOR EACH KEY POINT provided by the user (very important)
+      - 1 Summary/conclusion slide
       
-      For each slide, provide:
-      1. A clear, concise title
-      2. 3-5 bullet points of content that expand on the key points with additional information
+      For each content slide:
+      1. Use the exact key point as the slide title
+      2. Provide 3-5 bullet points that expand on that specific key point with research, data, and insights
       
       Format the response as valid JSON with this structure:
       {
@@ -135,22 +148,11 @@ const enhanceContentWithGemini = async (data: PresentationData): Promise<SlideCo
     // Parse the JSON response
     const geminiResponse = JSON.parse(jsonMatch[0]) as GeminiResponse;
     
-    // Make sure we have the requested number of slides, adjusting if necessary
-    const slides = geminiResponse.slides;
-    if (slides.length < data.slideCount) {
-      console.log(`Gemini returned ${slides.length} slides, adding more to reach ${data.slideCount}`);
-      // Add more slides if needed
-      const additionalSlides = generateAdditionalSlides(
-        data.slideCount - slides.length,
-        userPoints,
-        data.audience
-      );
-      slides.push(...additionalSlides);
-    } else if (slides.length > data.slideCount) {
-      console.log(`Gemini returned ${slides.length} slides, trimming to ${data.slideCount}`);
-      // Trim slides to match requested count
-      return slides.slice(0, data.slideCount);
-    }
+    // Process the slides to add images
+    const slides = geminiResponse.slides.map((slide, index) => ({
+      ...slide,
+      image: getRandomImage()
+    }));
     
     return slides;
   } catch (error) {
@@ -162,45 +164,10 @@ const enhanceContentWithGemini = async (data: PresentationData): Promise<SlideCo
 };
 
 /**
- * Generate additional slides if needed to meet the requested count
- */
-const generateAdditionalSlides = (count: number, userPoints: string[], audience: string): SlideContent[] => {
-  const additionalSlides: SlideContent[] = [];
-  
-  for (let i = 0; i < count && i < userPoints.length; i++) {
-    const point = userPoints[i];
-    additionalSlides.push({
-      title: `Additional Details: ${point}`,
-      points: [
-        `Further analysis of ${point}`,
-        `Impact on ${audience}`,
-        `Implementation considerations`,
-        `Future directions`
-      ]
-    });
-  }
-  
-  // If we still need more slides, add generic ones
-  while (additionalSlides.length < count) {
-    additionalSlides.push({
-      title: "Additional Considerations",
-      points: [
-        "Further research opportunities",
-        "Potential challenges and mitigation strategies",
-        "Timeline for implementation",
-        "Resource requirements"
-      ]
-    });
-  }
-  
-  return additionalSlides;
-};
-
-/**
  * Local AI-like enhancement as fallback
  */
 const enhanceContentWithLocalAI = (data: PresentationData): SlideContent[] => {
-  const userPoints = parseBulletPoints(data.bulletPoints);
+  const userPoints = data.keyPoints;
   const slides: SlideContent[] = [];
   const audience = data.audience;
   const purpose = data.purpose;
@@ -212,74 +179,29 @@ const enhanceContentWithLocalAI = (data: PresentationData): SlideContent[] => {
       `Welcome to this presentation designed for ${audience}`,
       `Purpose: ${purpose}`,
       `This presentation covers ${userPoints.length} key points`
-    ]
+    ],
+    image: getRandomImage()
   });
 
-  // Add agenda slide
-  slides.push({
-    title: "Agenda",
-    points: userPoints.map((point, index) => `${index + 1}. ${point.split(' ').slice(0, 3).join(' ')}...`)
-  });
-  
-  // Process each user bullet point into a content-rich slide
+  // Process each user key point into a content-rich slide
   userPoints.forEach((point, index) => {
     // Generate AI-enhanced content based on the bullet point
     const enhancedPoints = generateEnhancedPoints(point, audience, purpose);
     
     slides.push({
       title: point,
-      points: enhancedPoints
+      points: enhancedPoints,
+      image: getRandomImage()
     });
-
-    // For longer points, create a follow-up slide with implementation details
-    if (point.length > 30 && Math.random() > 0.5) {
-      slides.push({
-        title: `${point} - Implementation`,
-        points: generateImplementationPoints(point, audience)
-      });
-    }
   });
 
   // Add summary slide
   const summaryPoints = generateSummaryPoints(userPoints, audience, purpose);
   slides.push({
     title: "Summary",
-    points: summaryPoints
+    points: summaryPoints,
+    image: getRandomImage()
   });
-  
-  // Add conclusion/call to action slide
-  slides.push({
-    title: "Next Steps",
-    points: [
-      "Implementation timeline",
-      "Resource allocation",
-      "Key stakeholders",
-      "Contact information"
-    ]
-  });
-  
-  // Trim to fit requested slide count, but ensure we have at least intro and conclusion
-  const minSlides = Math.min(slides.length, data.slideCount);
-  if (minSlides < slides.length) {
-    // Keep intro and conclusion, trim from middle content
-    const introSlides = slides.slice(0, 2); // Intro + agenda
-    const conclusionSlides = slides.slice(-2); // Summary + next steps
-    
-    // Calculate how many content slides we can keep
-    const contentSlidesCount = minSlides - 4;
-    let contentSlides: SlideContent[] = [];
-    
-    if (contentSlidesCount > 0) {
-      const contentSlidesFull = slides.slice(2, -2);
-      const step = Math.max(1, Math.floor(contentSlidesFull.length / contentSlidesCount));
-      
-      for (let i = 0; i < contentSlidesFull.length && contentSlides.length < contentSlidesCount; i += step) {
-        contentSlides.push(contentSlidesFull[i]);
-      }
-    }
-    
-    return [...introSlides, ...contentSlides, ...conclusionSlides];
-  }
   
   return slides;
 };
@@ -321,19 +243,6 @@ const generateEnhancedPoints = (point: string, audience: string, purpose: string
   enhancedPoints.push(`How could this impact your specific situation?`);
   
   return enhancedPoints;
-};
-
-/**
- * Generate implementation-focused points for detailed slides
- */
-const generateImplementationPoints = (point: string, audience: string): string[] => {
-  return [
-    "Phase 1: Initial assessment and planning",
-    "Phase 2: Stakeholder engagement and resource allocation",
-    "Phase 3: Implementation and monitoring",
-    "Phase 4: Evaluation and refinement",
-    "Expected timeline: 3-6 months depending on scope"
-  ];
 };
 
 /**
@@ -401,7 +310,7 @@ export const generatePresentation = async (data: PresentationData): Promise<Blob
       { rect: { x: 0, y: 0, w: '100%', h: 0.5, fill: { color: colors.primary } } },
       // Footer
       { rect: { x: 0, y: '95%', w: '100%', h: 0.3, fill: { color: colors.primary } } },
-      { text: { text: "UCL Presentation Generator", color: "#FFFFFF", fontSize: 8 } }
+      { text: { text: "UCL Presentation Generator", fontSize: 8, color: "#FFFFFF" } }
     ]
   });
   
@@ -409,9 +318,32 @@ export const generatePresentation = async (data: PresentationData): Promise<Blob
   slides.forEach((slide, index) => {
     const pptxSlide = pptx.addSlide({ masterName: "UCL_MASTER" });
     
+    // Add UCL logo to top left of every slide
+    pptxSlide.addImage({
+      path: UCL_LOGO,
+      x: 0.3,
+      y: 0.3,
+      w: 1,
+      h: 0.4
+    });
+    
+    // Add background image for visual interest (semi-transparent)
+    if (slide.image) {
+      pptxSlide.addImage({
+        path: slide.image,
+        x: 0,
+        y: 0,
+        w: '100%',
+        h: '100%',
+        transparency: 85, // 85% transparent
+      });
+    }
+    
     if (index === 0) {
       // Title slide
       pptxSlide.addText(slide.title, {
+        x: 1,
+        y: 1.5,
         w: '80%', 
         h: 1.5, 
         fontSize: 44, 
@@ -423,6 +355,8 @@ export const generatePresentation = async (data: PresentationData): Promise<Blob
       // Purpose and audience
       slide.points.forEach((point, pointIndex) => {
         pptxSlide.addText(point, {
+          x: 1,
+          y: 3 + pointIndex * 0.5,
           w: '80%',
           fontSize: 20,
           color: colors.text === "#FFFFFF" ? "#FFFFFF" : colors.primary,
@@ -432,6 +366,8 @@ export const generatePresentation = async (data: PresentationData): Promise<Blob
       
       // UCL branding on title slide
       pptxSlide.addText("University College London", {
+        x: 1,
+        y: 5,
         w: '80%',
         fontSize: 14,
         color: colors.primary,
@@ -440,6 +376,8 @@ export const generatePresentation = async (data: PresentationData): Promise<Blob
     } else {
       // Content slides
       pptxSlide.addText(slide.title, {
+        x: 0.5,
+        y: 0.8,
         w: '95%',
         fontSize: 32,
         color: colors.text === "#FFFFFF" ? "#FFFFFF" : colors.primary,
@@ -449,6 +387,8 @@ export const generatePresentation = async (data: PresentationData): Promise<Blob
       // Add bullet points
       slide.points.forEach((point, pointIndex) => {
         pptxSlide.addText(point, {
+          x: 0.5,
+          y: 1.8 + pointIndex * 0.7,
           w: '90%',
           fontSize: 18,
           color: colors.text,
@@ -459,10 +399,11 @@ export const generatePresentation = async (data: PresentationData): Promise<Blob
     
     // Add slide number to footer (except title slide)
     if (index > 0) {
-      pptxSlide.addText(`Slide ${index + 1}/${slides.length}`, {
-        w: 2,
-        color: "#FFFFFF",
-        fontSize: 8
+      pptxSlide.addText(`Slide ${index}/${slides.length - 1}`, {
+        x: 'right',
+        y: 'bottom',
+        fontSize: 8,
+        color: "#FFFFFF"
       });
     }
   });

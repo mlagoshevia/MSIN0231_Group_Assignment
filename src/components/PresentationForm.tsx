@@ -13,7 +13,16 @@ import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/components/ui/use-toast";
-import { Loader2, Download, Sparkles, Key } from "lucide-react";
+import { 
+  Loader2, 
+  Download, 
+  Sparkles, 
+  Key, 
+  Plus, 
+  Trash2,
+  X,
+  Move
+} from "lucide-react";
 import { generatePresentation, downloadPresentation } from "@/utils/presentationGenerator";
 
 const AUDIENCE_OPTIONS = [
@@ -37,15 +46,59 @@ const PresentationForm = () => {
   const [presentationBlob, setPresentationBlob] = useState<Blob | null>(null);
   const [generatingAI, setGeneratingAI] = useState(false);
   const [showApiKey, setShowApiKey] = useState(false);
+  const [newKeyPoint, setNewKeyPoint] = useState("");
   const [formData, setFormData] = useState({
     title: "",
-    bulletPoints: "",
+    keyPoints: [] as string[],
     audience: "",
     purpose: "",
     template: "",
-    slideCount: 5,
     apiKey: "",
   });
+
+  const addKeyPoint = () => {
+    if (newKeyPoint.trim() === "") return;
+    
+    setFormData({
+      ...formData,
+      keyPoints: [...formData.keyPoints, newKeyPoint.trim()]
+    });
+    setNewKeyPoint("");
+    
+    toast({
+      title: "Key point added",
+      description: "A new slide will be created for this point."
+    });
+  };
+
+  const removeKeyPoint = (index: number) => {
+    const updatedKeyPoints = [...formData.keyPoints];
+    updatedKeyPoints.splice(index, 1);
+    setFormData({
+      ...formData,
+      keyPoints: updatedKeyPoints
+    });
+  };
+
+  const moveKeyPoint = (index: number, direction: 'up' | 'down') => {
+    if (
+      (direction === 'up' && index === 0) || 
+      (direction === 'down' && index === formData.keyPoints.length - 1)
+    ) {
+      return;
+    }
+    
+    const newIndex = direction === 'up' ? index - 1 : index + 1;
+    const updatedKeyPoints = [...formData.keyPoints];
+    const temp = updatedKeyPoints[index];
+    updatedKeyPoints[index] = updatedKeyPoints[newIndex];
+    updatedKeyPoints[newIndex] = temp;
+    
+    setFormData({
+      ...formData,
+      keyPoints: updatedKeyPoints
+    });
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -105,7 +158,7 @@ const PresentationForm = () => {
   const isFormValid = () => {
     return (
       formData.title.trim() !== "" &&
-      formData.bulletPoints.trim() !== "" &&
+      formData.keyPoints.length > 0 &&
       formData.audience !== "" &&
       formData.purpose.trim() !== "" &&
       formData.template !== ""
@@ -137,22 +190,95 @@ const PresentationForm = () => {
           </div>
 
           <div>
-            <Label htmlFor="bulletPoints" className="text-sm font-medium">
-              Key Points (Gemini AI will enhance these)
+            <Label className="text-sm font-medium flex justify-between items-center">
+              <span>Key Points (Each will become a slide)</span>
+              <span className="text-xs text-gray-500">
+                {formData.keyPoints.length} points added
+              </span>
             </Label>
-            <Textarea
-              id="bulletPoints"
-              value={formData.bulletPoints}
-              onChange={(e) =>
-                setFormData({ ...formData, bulletPoints: e.target.value })
-              }
-              className="mt-1 h-32"
-              placeholder="Enter your bullet points (one per line, starting with -)"
-            />
+            
+            {/* List of existing key points */}
+            <div className="mt-2 space-y-2">
+              {formData.keyPoints.map((point, index) => (
+                <div 
+                  key={index} 
+                  className="flex items-center gap-2 p-2 rounded-md bg-purple-50 border border-purple-100 group"
+                >
+                  <div className="flex-none flex flex-col">
+                    <Button 
+                      type="button" 
+                      size="icon" 
+                      variant="ghost" 
+                      className="h-5 w-5 opacity-70 hover:opacity-100"
+                      onClick={() => moveKeyPoint(index, 'up')}
+                      disabled={index === 0}
+                    >
+                      <Move className="h-3 w-3 rotate-180" />
+                    </Button>
+                    <Button 
+                      type="button" 
+                      size="icon" 
+                      variant="ghost" 
+                      className="h-5 w-5 opacity-70 hover:opacity-100"
+                      onClick={() => moveKeyPoint(index, 'down')}
+                      disabled={index === formData.keyPoints.length - 1}
+                    >
+                      <Move className="h-3 w-3" />
+                    </Button>
+                  </div>
+                  
+                  <div className="flex-1 text-sm font-medium">
+                    <div className="bg-purple-100/50 px-2 py-1 rounded">
+                      Slide {index + 1}: {point}
+                    </div>
+                  </div>
+                  
+                  <Button 
+                    type="button" 
+                    size="icon" 
+                    variant="ghost" 
+                    className="flex-none text-red-500 opacity-70 hover:opacity-100"
+                    onClick={() => removeKeyPoint(index)}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
+              ))}
+              
+              {formData.keyPoints.length === 0 && (
+                <div className="text-center py-4 text-gray-500 bg-gray-50 rounded-md">
+                  <p>No key points added yet. Add points below.</p>
+                </div>
+              )}
+            </div>
+            
+            {/* Add new key point */}
+            <div className="mt-2 flex gap-2">
+              <Input
+                value={newKeyPoint}
+                onChange={(e) => setNewKeyPoint(e.target.value)}
+                placeholder="Enter a new key point"
+                className="flex-1"
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && newKeyPoint.trim() !== "") {
+                    e.preventDefault();
+                    addKeyPoint();
+                  }
+                }}
+              />
+              <Button 
+                type="button" 
+                onClick={addKeyPoint}
+                disabled={newKeyPoint.trim() === ""}
+                className="bg-ucl-purple hover:bg-ucl-purple/90"
+              >
+                <Plus className="h-4 w-4 mr-1" />
+                Add Point
+              </Button>
+            </div>
+            
             <p className="text-xs text-gray-500 mt-1">
-              Each point should start with a dash (-). The AI will expand on these points with research and data. Example:<br />
-              - First important point<br />
-              - Second important point
+              Each key point will become its own slide. Gemini AI will enhance each point with research and data.
             </p>
           </div>
 
@@ -216,22 +342,6 @@ const PresentationForm = () => {
               }
               className="mt-1"
               placeholder="Describe the purpose of your presentation"
-            />
-          </div>
-
-          <div>
-            <Label htmlFor="slideCount" className="text-sm font-medium">
-              Number of Slides: {formData.slideCount}
-            </Label>
-            <input
-              type="range"
-              min="3"
-              max="15"
-              value={formData.slideCount}
-              onChange={(e) =>
-                setFormData({ ...formData, slideCount: parseInt(e.target.value) })
-              }
-              className="w-full h-2 bg-ucl-purple/20 rounded-lg appearance-none cursor-pointer mt-2"
             />
           </div>
 
