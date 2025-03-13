@@ -4,11 +4,24 @@ import pptxgen from "pptxgenjs";
 // Define presentation data types
 export interface PresentationData {
   title: string;
-  keyPoints: string[]; // Changed from bulletPoints to keyPoints array
+  keyPoints: KeyPoint[]; // Changed from string[] to KeyPoint[]
   audience: string;
   purpose: string;
   template: string;
   apiKey?: string; // Optional Gemini API key
+  includeSummarySlide: boolean; // Controls whether to include a summary slide
+}
+
+export interface KeyPoint {
+  content: string;
+  layout: SlideLayout;
+}
+
+export enum SlideLayout {
+  TEXT_ONLY = "text-only",
+  IMAGE_RIGHT = "image-right",
+  IMAGE_LEFT = "image-left",
+  IMAGE_BACKGROUND = "image-background"
 }
 
 interface SlideContent {
@@ -34,7 +47,7 @@ const enhanceContentWithGemini = async (data: PresentationData): Promise<SlideCo
   }
   
   try {
-    const userPoints = data.keyPoints;
+    const userPoints = data.keyPoints.map(kp => kp.content);
     
     // Prepare the prompt for Gemini
     const prompt = {
@@ -54,10 +67,10 @@ const enhanceContentWithGemini = async (data: PresentationData): Promise<SlideCo
       Key Points: 
       ${userPoints.map((point, index) => `${index + 1}. ${point}`).join('\n')}
       
-      Please generate a presentation with exactly ${userPoints.length + 2} slides, including:
+      Please generate a presentation with exactly ${userPoints.length + (data.includeSummarySlide ? 2 : 1)} slides, including:
       - 1 Title slide
       - ${userPoints.length} Content slides - ONE FOR EACH KEY POINT provided by the user (very important)
-      - 1 Summary/conclusion slide
+      ${data.includeSummarySlide ? '- 1 Summary/conclusion slide' : ''}
       
       For each content slide:
       1. Create a compelling slide title based on the key point (but don't just repeat the key point)
@@ -140,7 +153,7 @@ const enhanceContentWithGemini = async (data: PresentationData): Promise<SlideCo
  * Local AI-like enhancement as fallback
  */
 const enhanceContentWithLocalAI = (data: PresentationData): SlideContent[] => {
-  const userPoints = data.keyPoints;
+  const userPoints = data.keyPoints.map(kp => kp.content);
   const slides: SlideContent[] = [];
   const audience = data.audience;
   const purpose = data.purpose;
@@ -152,7 +165,7 @@ const enhanceContentWithLocalAI = (data: PresentationData): SlideContent[] => {
       `Welcome to this presentation designed for ${audience}`,
       `Purpose: ${purpose}`,
       `This presentation covers ${userPoints.length} key points`,
-      `A summary slide is included at the end`
+      `${data.includeSummarySlide ? 'A summary slide is included at the end' : ''}`
     ]
   });
 
@@ -170,12 +183,14 @@ const enhanceContentWithLocalAI = (data: PresentationData): SlideContent[] => {
     });
   });
 
-  // Add summary slide
-  const summaryPoints = generateSummaryPoints(userPoints, audience, purpose);
-  slides.push({
-    title: "Summary",
-    points: summaryPoints
-  });
+  // Add summary slide if requested
+  if (data.includeSummarySlide) {
+    const summaryPoints = generateSummaryPoints(userPoints, audience, purpose);
+    slides.push({
+      title: "Summary",
+      points: summaryPoints
+    });
+  }
   
   return slides;
 };
@@ -366,23 +381,147 @@ export const generatePresentation = async (data: PresentationData): Promise<Blob
           h: 0.8
         });
         
-        // Add bullet points - Body text should be black by default
-        slide.points.forEach((point, pointIndex) => {
-          pptxSlide.addText(point, {
-            fontSize: 18,
-            color: "#000000",
-            bullet: { type: 'bullet' },
-            x: 0.5,
-            y: 1.8 + pointIndex * 0.7,
-            w: 9,
-            h: 0.6
-          });
-        });
+        // Get the layout for this slide
+        const layoutType = index <= data.keyPoints.length ? data.keyPoints[index-1]?.layout : SlideLayout.TEXT_ONLY;
+        
+        // Apply different layouts based on the slide type
+        switch(layoutType) {
+          case SlideLayout.IMAGE_RIGHT:
+            // Text on left (70%), image placeholder on right (30%)
+            slide.points.forEach((point, pointIndex) => {
+              pptxSlide.addText(point, {
+                fontSize: 18,
+                color: "#000000",
+                bullet: { type: 'bullet' },
+                x: 0.5,
+                y: 1.8 + pointIndex * 0.7,
+                w: 5.5, // Reduced width for text
+                h: 0.6
+              });
+            });
+            
+            // Add image placeholder on right
+            pptxSlide.addShape('rect', {
+              x: 6.5,
+              y: 1.8,
+              w: 3,
+              h: 3.5,
+              fill: { color: 'F1F1F1' },
+              line: { color: 'DDDDDD', width: 1 }
+            });
+            
+            pptxSlide.addText("Image", {
+              x: 6.5,
+              y: 3,
+              w: 3,
+              h: 0.5,
+              align: 'center',
+              color: '888888',
+              fontSize: 14
+            });
+            break;
+            
+          case SlideLayout.IMAGE_LEFT:
+            // Image placeholder on left (30%), text on right (70%)
+            slide.points.forEach((point, pointIndex) => {
+              pptxSlide.addText(point, {
+                fontSize: 18,
+                color: "#000000",
+                bullet: { type: 'bullet' },
+                x: 4,
+                y: 1.8 + pointIndex * 0.7,
+                w: 5.5, // Reduced width for text
+                h: 0.6
+              });
+            });
+            
+            // Add image placeholder on left
+            pptxSlide.addShape('rect', {
+              x: 0.5,
+              y: 1.8,
+              w: 3,
+              h: 3.5,
+              fill: { color: 'F1F1F1' },
+              line: { color: 'DDDDDD', width: 1 }
+            });
+            
+            pptxSlide.addText("Image", {
+              x: 0.5,
+              y: 3,
+              w: 3,
+              h: 0.5,
+              align: 'center',
+              color: '888888',
+              fontSize: 14
+            });
+            break;
+            
+          case SlideLayout.IMAGE_BACKGROUND:
+            // Semi-transparent overlay for text over image
+            pptxSlide.addShape('rect', {
+              x: 0,
+              y: 0.5,
+              w: '100%',
+              h: '95%',
+              fill: { color: colors.secondary, transparency: 0.7 }
+            });
+            
+            // Image placeholder in background
+            pptxSlide.addShape('rect', {
+              x: 0.5,
+              y: 1,
+              w: 9,
+              h: 5,
+              fill: { color: 'F1F1F1' },
+              line: { color: 'DDDDDD', width: 1 }
+            });
+            
+            pptxSlide.addText("Background Image", {
+              x: 3,
+              y: 3,
+              w: 4,
+              h: 0.5,
+              align: 'center',
+              color: '888888',
+              fontSize: 14
+            });
+            
+            // Text overlay centered
+            slide.points.forEach((point, pointIndex) => {
+              pptxSlide.addText(point, {
+                fontSize: 18,
+                color: "#000000",
+                bullet: { type: 'bullet' },
+                x: 1.5,
+                y: 1.8 + pointIndex * 0.7,
+                w: 7,
+                h: 0.6
+              });
+            });
+            break;
+            
+          case SlideLayout.TEXT_ONLY:
+          default:
+            // Default text-only layout
+            slide.points.forEach((point, pointIndex) => {
+              pptxSlide.addText(point, {
+                fontSize: 18,
+                color: "#000000",
+                bullet: { type: 'bullet' },
+                x: 0.5,
+                y: 1.8 + pointIndex * 0.7,
+                w: 9,
+                h: 0.6
+              });
+            });
+            break;
+        }
       }
       
       // Add slide number to footer (except title slide)
       if (index > 0) {
-        pptxSlide.addText(`Slide ${index}/${slides.length - 1}`, {
+        const totalSlides = data.includeSummarySlide ? data.keyPoints.length + 1 : data.keyPoints.length;
+        pptxSlide.addText(`Slide ${index}/${totalSlides}`, {
           fontFace: "Arial",
           fontSize: 8,
           color: "#FFFFFF",

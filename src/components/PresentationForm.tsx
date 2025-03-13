@@ -22,9 +22,21 @@ import {
   Trash2,
   ArrowUp,
   ArrowDown,
-  ExternalLink
+  ExternalLink,
+  Layout,
+  AlignLeft,
+  AlignRight,
+  Image
 } from "lucide-react";
-import { generatePresentation, downloadPresentation } from "@/utils/presentationGenerator";
+import { 
+  generatePresentation, 
+  downloadPresentation, 
+  SlideLayout, 
+  KeyPoint 
+} from "@/utils/presentationGenerator";
+import { Switch } from "@/components/ui/switch";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Form, FormControl, FormField, FormItem, FormLabel } from "@/components/ui/form";
 
 const AUDIENCE_OPTIONS = [
   "Students",
@@ -43,6 +55,33 @@ const TEMPLATE_OPTIONS = [
   { name: "UCL Dark Pink", value: "pink" },
 ];
 
+const SLIDE_LAYOUT_OPTIONS = [
+  { 
+    value: SlideLayout.TEXT_ONLY, 
+    label: "Text Only", 
+    icon: <AlignLeft className="h-4 w-4 mr-2" />,
+    description: "Standard slide with bullet points"
+  },
+  { 
+    value: SlideLayout.IMAGE_RIGHT, 
+    label: "Image Right", 
+    icon: <AlignRight className="h-4 w-4 mr-2" />,
+    description: "Text on left, image placeholder on right"
+  },
+  { 
+    value: SlideLayout.IMAGE_LEFT, 
+    label: "Image Left", 
+    icon: <AlignLeft className="h-4 w-4 mr-2" />,
+    description: "Image placeholder on left, text on right"
+  },
+  { 
+    value: SlideLayout.IMAGE_BACKGROUND, 
+    label: "Background Image", 
+    icon: <Image className="h-4 w-4 mr-2" />,
+    description: "Text overlay on background image"
+  },
+];
+
 const PresentationForm = () => {
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
@@ -50,13 +89,15 @@ const PresentationForm = () => {
   const [generatingAI, setGeneratingAI] = useState(false);
   const [showApiKey, setShowApiKey] = useState(false);
   const [newKeyPoint, setNewKeyPoint] = useState("");
+  const [newSlideLayout, setNewSlideLayout] = useState<SlideLayout>(SlideLayout.TEXT_ONLY);
   const [formData, setFormData] = useState({
     title: "",
-    keyPoints: [] as string[],
+    keyPoints: [] as KeyPoint[],
     audience: "",
     purpose: "",
     template: "",
     apiKey: "",
+    includeSummarySlide: true,
   });
 
   const addKeyPoint = () => {
@@ -64,13 +105,19 @@ const PresentationForm = () => {
     
     setFormData({
       ...formData,
-      keyPoints: [...formData.keyPoints, newKeyPoint.trim()]
+      keyPoints: [
+        ...formData.keyPoints, 
+        {
+          content: newKeyPoint.trim(),
+          layout: newSlideLayout
+        }
+      ]
     });
     setNewKeyPoint("");
     
     toast({
       title: "Key point added",
-      description: "A new slide will be created for this point."
+      description: `A new ${SLIDE_LAYOUT_OPTIONS.find(option => option.value === newSlideLayout)?.label} slide will be created for this point.`
     });
   };
 
@@ -100,6 +147,24 @@ const PresentationForm = () => {
     setFormData({
       ...formData,
       keyPoints: updatedKeyPoints
+    });
+  };
+
+  const updateSlideLayout = (index: number, layout: SlideLayout) => {
+    const updatedKeyPoints = [...formData.keyPoints];
+    updatedKeyPoints[index] = {
+      ...updatedKeyPoints[index],
+      layout
+    };
+    
+    setFormData({
+      ...formData,
+      keyPoints: updatedKeyPoints
+    });
+    
+    toast({
+      title: "Slide layout updated",
+      description: `Changed to ${SLIDE_LAYOUT_OPTIONS.find(option => option.value === layout)?.label} layout.`
     });
   };
 
@@ -221,46 +286,75 @@ const PresentationForm = () => {
               {formData.keyPoints.map((point, index) => (
                 <div 
                   key={index} 
-                  className="flex items-center gap-2 p-2 rounded-md bg-purple-50 border border-purple-100 group"
+                  className="flex flex-col p-2 rounded-md bg-purple-50 border border-purple-100 group"
                 >
-                  <div className="flex-none flex flex-col">
-                    <Button 
-                      type="button" 
-                      size="icon" 
-                      variant="ghost" 
-                      className="h-5 w-5 opacity-70 hover:opacity-100"
-                      onClick={() => moveKeyPoint(index, 'up')}
-                      disabled={index === 0}
-                    >
-                      <ArrowUp className="h-3 w-3" />
-                    </Button>
-                    <Button 
-                      type="button" 
-                      size="icon" 
-                      variant="ghost" 
-                      className="h-5 w-5 opacity-70 hover:opacity-100"
-                      onClick={() => moveKeyPoint(index, 'down')}
-                      disabled={index === formData.keyPoints.length - 1}
-                    >
-                      <ArrowDown className="h-3 w-3" />
-                    </Button>
-                  </div>
-                  
-                  <div className="flex-1 text-sm font-medium">
-                    <div className="bg-purple-100/50 px-2 py-1 rounded">
-                      Slide {index + 1}: {point}
+                  <div className="flex items-center gap-2 mb-2">
+                    <div className="flex-none flex flex-col">
+                      <Button 
+                        type="button" 
+                        size="icon" 
+                        variant="ghost" 
+                        className="h-5 w-5 opacity-70 hover:opacity-100"
+                        onClick={() => moveKeyPoint(index, 'up')}
+                        disabled={index === 0}
+                      >
+                        <ArrowUp className="h-3 w-3" />
+                      </Button>
+                      <Button 
+                        type="button" 
+                        size="icon" 
+                        variant="ghost" 
+                        className="h-5 w-5 opacity-70 hover:opacity-100"
+                        onClick={() => moveKeyPoint(index, 'down')}
+                        disabled={index === formData.keyPoints.length - 1}
+                      >
+                        <ArrowDown className="h-3 w-3" />
+                      </Button>
                     </div>
+                    
+                    <div className="flex-1 text-sm font-medium">
+                      <div className="bg-purple-100/50 px-2 py-1 rounded">
+                        Slide {index + 1}: {point.content}
+                      </div>
+                    </div>
+                    
+                    <Button 
+                      type="button" 
+                      size="icon" 
+                      variant="ghost" 
+                      className="flex-none text-red-500 opacity-70 hover:opacity-100"
+                      onClick={() => removeKeyPoint(index)}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
                   </div>
                   
-                  <Button 
-                    type="button" 
-                    size="icon" 
-                    variant="ghost" 
-                    className="flex-none text-red-500 opacity-70 hover:opacity-100"
-                    onClick={() => removeKeyPoint(index)}
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
+                  {/* Slide Layout Options */}
+                  <div className="mt-1 ml-6 bg-white p-2 rounded border border-gray-100">
+                    <div className="text-xs font-medium text-gray-500 mb-2 flex items-center">
+                      <Layout className="h-3 w-3 mr-1" /> Slide Layout:
+                    </div>
+                    <RadioGroup 
+                      value={point.layout} 
+                      onValueChange={(value) => updateSlideLayout(index, value as SlideLayout)}
+                      className="flex gap-2 flex-wrap"
+                    >
+                      {SLIDE_LAYOUT_OPTIONS.map((option) => (
+                        <FormItem key={option.value} className="flex items-center space-x-1 space-y-0">
+                          <FormControl>
+                            <RadioGroupItem value={option.value} id={`layout-${index}-${option.value}`} />
+                          </FormControl>
+                          <FormLabel 
+                            htmlFor={`layout-${index}-${option.value}`} 
+                            className={`text-xs cursor-pointer flex items-center ${point.layout === option.value ? 'text-ucl-purple font-medium' : 'text-gray-600'}`}
+                          >
+                            {option.icon}
+                            {option.label}
+                          </FormLabel>
+                        </FormItem>
+                      ))}
+                    </RadioGroup>
+                  </div>
                 </div>
               ))}
               
@@ -271,33 +365,67 @@ const PresentationForm = () => {
               )}
             </div>
             
-            <div className="mt-2 flex gap-2">
-              <Input
-                value={newKeyPoint}
-                onChange={(e) => setNewKeyPoint(e.target.value)}
-                placeholder="Enter a new key point"
-                className="flex-1"
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' && newKeyPoint.trim() !== "") {
-                    e.preventDefault();
-                    addKeyPoint();
-                  }
-                }}
-              />
-              <Button 
-                type="button" 
-                onClick={addKeyPoint}
-                disabled={newKeyPoint.trim() === ""}
-                className="bg-ucl-purple hover:bg-ucl-purple/90"
-              >
-                <Plus className="h-4 w-4 mr-1" />
-                Add Point
-              </Button>
+            <div className="mt-2">
+              <Label className="text-sm font-medium mb-1 block">Add New Key Point</Label>
+              <div className="flex gap-2 items-start">
+                <div className="flex-1">
+                  <Input
+                    value={newKeyPoint}
+                    onChange={(e) => setNewKeyPoint(e.target.value)}
+                    placeholder="Enter a new key point"
+                    className="mb-1"
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' && newKeyPoint.trim() !== "") {
+                        e.preventDefault();
+                        addKeyPoint();
+                      }
+                    }}
+                  />
+                  <div className="bg-gray-50 p-2 rounded border border-gray-100">
+                    <div className="text-xs font-medium text-gray-500 mb-1 flex items-center">
+                      <Layout className="h-3 w-3 mr-1" /> Select Slide Layout:
+                    </div>
+                    <RadioGroup 
+                      value={newSlideLayout} 
+                      onValueChange={(value) => setNewSlideLayout(value as SlideLayout)}
+                      className="flex gap-2 flex-wrap"
+                    >
+                      {SLIDE_LAYOUT_OPTIONS.map((option) => (
+                        <FormItem key={option.value} className="flex items-center space-x-1 space-y-0">
+                          <FormControl>
+                            <RadioGroupItem value={option.value} id={`new-layout-${option.value}`} />
+                          </FormControl>
+                          <FormLabel 
+                            htmlFor={`new-layout-${option.value}`} 
+                            className={`text-xs cursor-pointer flex items-center ${newSlideLayout === option.value ? 'text-ucl-purple font-medium' : 'text-gray-600'}`}
+                          >
+                            {option.icon}
+                            {option.label}
+                          </FormLabel>
+                        </FormItem>
+                      ))}
+                    </RadioGroup>
+                    <p className="text-xs text-gray-500 mt-1">
+                      {SLIDE_LAYOUT_OPTIONS.find(option => option.value === newSlideLayout)?.description}
+                    </p>
+                  </div>
+                </div>
+                
+                <Button 
+                  type="button" 
+                  onClick={addKeyPoint}
+                  disabled={newKeyPoint.trim() === ""}
+                  className="bg-ucl-purple hover:bg-ucl-purple/90"
+                >
+                  <Plus className="h-4 w-4 mr-1" />
+                  Add Point
+                </Button>
+              </div>
+              
+              <p className="text-xs text-gray-500 mt-1">
+                Each key point will become its own slide. Gemini AI will enhance each point with research and data.
+              </p>
             </div>
-            
-            <p className="text-xs text-gray-500 mt-1">
-              Each key point will become its own slide. Gemini AI will enhance each point with research and data.
-            </p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -345,6 +473,21 @@ const PresentationForm = () => {
                   ))}
                 </SelectContent>
               </Select>
+            </div>
+          </div>
+
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-2">
+              <Switch
+                id="includeSummary"
+                checked={formData.includeSummarySlide}
+                onCheckedChange={(checked) =>
+                  setFormData({ ...formData, includeSummarySlide: checked })
+                }
+              />
+              <Label htmlFor="includeSummary" className="text-sm">
+                Include AI-generated summary slide
+              </Label>
             </div>
           </div>
 
