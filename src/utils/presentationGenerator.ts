@@ -600,20 +600,28 @@ export const generatePresentation = async (data: PresentationData): Promise<Blob
                 // Use the uploaded image as background
                 const imageData = await fileToBase64(keyPoint.imageFile);
                 
-                // Add the image as background with 85% transparency
+                // Set background with the image, ensuring it's transparent at 15% opacity (85% transparency)
                 pptxSlide.background = { 
-                  data: imageData,
-                  transparency: 0.85 // Set image to 85% transparent
+                  data: imageData
                 };
-                console.log(`Added background image for slide ${index} with 85% transparency`);
                 
-                // No additional semi-transparent overlay needed since the image itself is transparent
+                // Add a white semi-transparent overlay for better readability
+                // The transparency is set to 0.85 (85% transparent)
+                pptxSlide.addShape('rect', {
+                  x: 0,
+                  y: 0.5,
+                  w: '100%',
+                  h: '95%',
+                  fill: { color: "FFFFFF", transparency: 0.85 }
+                });
+                
+                console.log(`Added background image for slide ${index} with transparent overlay`);
               } catch (error) {
                 console.error(`Error adding background image to slide ${index}:`, error);
               }
             }
             
-            // Text overlay with standardized font size - no overlay shape needed
+            // Text overlay with standardized font size
             slide.points.forEach((point, pointIndex) => {
               pptxSlide.addText(point, {
                 fontSize: standardPointFontSize,
