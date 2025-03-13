@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -19,13 +20,10 @@ import {
   Key, 
   Plus, 
   Trash2,
-  Move,
+  X,
+  Move
 } from "lucide-react";
-import { 
-  generatePresentation, 
-  downloadPresentation,
-  PresentationInput
-} from "@/utils/presentationGenerator";
+import { generatePresentation, downloadPresentation } from "@/utils/presentationGenerator";
 
 const AUDIENCE_OPTIONS = [
   "Students",
@@ -61,11 +59,9 @@ const PresentationForm = () => {
   const addKeyPoint = () => {
     if (newKeyPoint.trim() === "") return;
     
-    const updatedKeyPoints = [...formData.keyPoints, newKeyPoint.trim()];
-    
     setFormData({
       ...formData,
-      keyPoints: updatedKeyPoints,
+      keyPoints: [...formData.keyPoints, newKeyPoint.trim()]
     });
     setNewKeyPoint("");
     
@@ -78,10 +74,9 @@ const PresentationForm = () => {
   const removeKeyPoint = (index: number) => {
     const updatedKeyPoints = [...formData.keyPoints];
     updatedKeyPoints.splice(index, 1);
-    
     setFormData({
       ...formData,
-      keyPoints: updatedKeyPoints,
+      keyPoints: updatedKeyPoints
     });
   };
 
@@ -94,15 +89,14 @@ const PresentationForm = () => {
     }
     
     const newIndex = direction === 'up' ? index - 1 : index + 1;
-    
     const updatedKeyPoints = [...formData.keyPoints];
-    const tempPoint = updatedKeyPoints[index];
+    const temp = updatedKeyPoints[index];
     updatedKeyPoints[index] = updatedKeyPoints[newIndex];
-    updatedKeyPoints[newIndex] = tempPoint;
+    updatedKeyPoints[newIndex] = temp;
     
     setFormData({
       ...formData,
-      keyPoints: updatedKeyPoints,
+      keyPoints: updatedKeyPoints
     });
   };
 
@@ -111,53 +105,36 @@ const PresentationForm = () => {
     setLoading(true);
     setPresentationBlob(null);
     
+    // Log the form data
     console.log("Form submitted:", { 
       ...formData, 
-      apiKey: formData.apiKey ? "********" : "" 
+      apiKey: formData.apiKey ? "********" : "" // Hide API key in logs
     });
     
     try {
+      // Start the AI generation process
       setGeneratingAI(true);
       toast({
-        title: "Preparing your presentation",
-        description: "Creating your presentation with your provided key points...",
+        title: "AI is crafting your presentation",
+        description: "Connecting to Gemini API and generating enhanced content...",
         duration: 3000,
       });
       
-      const slides = formData.keyPoints.map(point => {
-        const contentPoints = generateContentPointsFromKeyPoint(point);
-        
-        return {
-          title: point,
-          content: contentPoints
-        };
-      });
+      // Generate the presentation with Gemini-enhanced content
+      const pptxBlob = await generatePresentation(formData);
+      setPresentationBlob(pptxBlob);
       
-      const presentationInput: PresentationInput = {
-        title: formData.title,
-        slides: slides,
-        audienceLevel: formData.audience,
-        colors: getColorsFromTemplate(formData.template)
-      };
-      
-      const pptxBlob = await generatePresentation(presentationInput);
-      
-      if (pptxBlob instanceof Blob) {
-        setPresentationBlob(pptxBlob);
-      } else {
-        throw new Error("Failed to generate presentation: Invalid output format");
-      }
-      
+      // Show success toast
       toast({
-        title: "Presentation generated!",
-        description: `Your "${formData.title}" presentation has been created.`,
+        title: "PowerPoint generated!",
+        description: `Your "${formData.title}" presentation has been created with Gemini-enhanced content.`,
         duration: 5000,
       });
     } catch (error) {
-      console.error("Error in generation:", error);
+      console.error("Error in AI generation:", error);
       toast({
-        title: "Generation failed",
-        description: error instanceof Error ? error.message : "There was an error creating your presentation. Please try again.",
+        title: "AI generation failed",
+        description: error instanceof Error ? error.message : "There was an error enhancing your content. Please try again.",
         variant: "destructive",
       });
     } finally {
@@ -166,60 +143,7 @@ const PresentationForm = () => {
     }
   };
 
-  const generateContentPointsFromKeyPoint = (keyPoint: string): string[] => {
-    const words = keyPoint.split(' ');
-    const contentPoints = [
-      `${keyPoint} is a critical aspect to consider`,
-      `Research shows that ${words[0].toLowerCase()} ${words.slice(1).join(' ')} impacts outcomes`,
-      `Consider how ${keyPoint.toLowerCase()} affects different stakeholders`,
-      `Implementation strategies for ${keyPoint.toLowerCase()} include systematic approaches`,
-      `Future developments may change how we approach ${keyPoint.toLowerCase()}`
-    ];
-    
-    return contentPoints.slice(0, Math.floor(Math.random() * 2) + 3);
-  };
-
-  const getColorsFromTemplate = (template: string) => {
-    switch (template) {
-      case 'purple':
-        return {
-          main: "#500778",
-          light: "#C6B0BC",
-          dark: "#2C0442",
-          accent: "#52C152"
-        };
-      case 'green':
-        return {
-          main: "#52C152",
-          light: "#C9D1A8",
-          dark: "#113B3A",
-          accent: "#500778"
-        };
-      case 'dark':
-        return {
-          main: "#002248",
-          light: "#B6DCE5",
-          dark: "#000000",
-          accent: "#FFCA36"
-        };
-      case 'light':
-        return {
-          main: "#34C6C6",
-          light: "#FFFFFF",
-          dark: "#002248",
-          accent: "#AC145A"
-        };
-      default:
-        return {
-          main: "#500778",
-          light: "#C6B0BC",
-          dark: "#2C0442",
-          accent: "#52C152"
-        };
-    }
-  };
-
-  const handleDownloadPPTX = () => {
+  const handleDownload = () => {
     if (presentationBlob) {
       const filename = `${formData.title.replace(/\s+/g, '_')}_presentation.pptx`;
       downloadPresentation(presentationBlob, filename);
@@ -247,7 +171,7 @@ const PresentationForm = () => {
         <div className="space-y-4">
           <div className="flex items-center gap-2 pb-2 border-b border-purple-100">
             <Sparkles className="text-ucl-purple h-5 w-5" />
-            <h2 className="text-lg font-medium text-ucl-purple">UCL Presentation Generator</h2>
+            <h2 className="text-lg font-medium text-ucl-purple">AI-Powered Presentation Generator</h2>
           </div>
           
           <div>
@@ -273,6 +197,7 @@ const PresentationForm = () => {
               </span>
             </Label>
             
+            {/* List of existing key points */}
             <div className="mt-2 space-y-2">
               {formData.keyPoints.map((point, index) => (
                 <div 
@@ -327,6 +252,7 @@ const PresentationForm = () => {
               )}
             </div>
             
+            {/* Add new key point */}
             <div className="mt-2 flex gap-2">
               <Input
                 value={newKeyPoint}
@@ -352,7 +278,7 @@ const PresentationForm = () => {
             </div>
             
             <p className="text-xs text-gray-500 mt-1">
-              Each key point will become its own slide with randomly selected images.
+              Each key point will become its own slide. Gemini AI will enhance each point with research and data.
             </p>
           </div>
 
@@ -470,7 +396,7 @@ const PresentationForm = () => {
             ) : (
               <>
                 <Sparkles className="mr-2 h-4 w-4" />
-                Generate Presentation
+                Generate AI-Powered Presentation
               </>
             )}
           </Button>
@@ -478,11 +404,11 @@ const PresentationForm = () => {
           {presentationBlob && (
             <Button 
               type="button"
-              onClick={handleDownloadPPTX}
+              onClick={handleDownload}
               className="w-full bg-green-600 hover:bg-green-700 text-white"
             >
               <Download className="mr-2 h-4 w-4" />
-              Download PowerPoint
+              Download Presentation
             </Button>
           )}
         </div>

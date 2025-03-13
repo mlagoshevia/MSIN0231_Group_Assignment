@@ -26,24 +26,10 @@ export default {
         background: "hsl(var(--background))",
         foreground: "hsl(var(--foreground))",
         ucl: {
-          // UCL official colors
-          purple: "#500778",       // Purple / Vibrant
-          darkpurple: "#2C0442",   // Purple / Dark 
-          mutedpurple: "#C6B0BC",  // Purple / Muted
-          green: "#52C152",        // Green / Vibrant
-          darkgreen: "#113B3A",    // Green / Dark
-          mutedgreen: "#C9D1A8",   // Green / Muted
-          blue: "#34C6C6",         // Blue / Vibrant
-          darkblue: "#002248",     // Blue / Dark
-          mutedblue: "#B6DCE5",    // Blue / Muted
-          yellow: "#FFCA36",       // Yellow / Vibrant
-          darkyellow: "#504D48",   // Yellow / Dark
-          mutedyellow: "#DAD6CA",  // Yellow / Muted
-          pink: "#AC145A",         // Pink / Vibrant
-          darkpink: "#4B0A42",     // Pink / Dark
-          mutedpink: "#DEB8C3",    // Pink / Muted
-          black: "#000000",        // Black
-          white: "#FFFFFF",        // White
+          purple: "#9b87f5",
+          dark: "#1A1F2C",
+          light: "#D6BCFA",
+          green: "#F2FCE2",
         },
         primary: {
           DEFAULT: "hsl(var(--primary))",
