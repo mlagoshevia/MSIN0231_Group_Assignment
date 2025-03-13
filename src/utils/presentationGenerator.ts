@@ -41,9 +41,15 @@ export const generatePresentation = async (
   // Generate content slides
   generateContentSlides(pres, input);
 
-  // Return the PPTX as a blob
-  // Use the correct property for PPTXGenJS
-  return pres.writeFile({ outputType: "blob" }) as Promise<Blob>;
+  try {
+    // Return the PPTX as a blob
+    // The correct way to get a blob from pptxgenjs
+    const blob = await pres.writeFile({ outputType: "blob" }) as unknown as Blob;
+    return blob;
+  } catch (error) {
+    console.error("Error generating presentation:", error);
+    throw new Error("Failed to generate presentation: " + (error instanceof Error ? error.message : "Unknown error"));
+  }
 };
 
 // Helper function to download a blob as a file
@@ -180,6 +186,18 @@ const generateCoverSlide = (pres: pptxgen, input: PresentationInput) => {
       italic: true,
     });
   }
+
+  // Add a conclusion/summary slide indicator
+  titleSlide.addText("Includes summary/conclusion slide", {
+    x: 0.5,
+    y: 4.0,
+    w: 9.0,
+    h: 0.3,
+    fontSize: 12,
+    color: accentColor,
+    fontFace: "Arial",
+    align: "center",
+  });
 };
 
 // Function to generate content slides
@@ -203,8 +221,7 @@ const generateContentSlides = (pres: pptxgen, input: PresentationInput) => {
     });
 
     // Create bullet points
-    const bulletPoints = slide.content
-      .map((point) => ({ text: point, indentLevel: 0 }));
+    const bulletPoints = slide.content.map(point => ({ text: point }));
 
     // Add bullet points to slide
     contentSlide.addText(bulletPoints, {
@@ -217,5 +234,41 @@ const generateContentSlides = (pres: pptxgen, input: PresentationInput) => {
       fontFace: "Arial",
       bullet: { type: "bullet" },
     });
+  });
+
+  // Add a summary/conclusion slide at the end
+  const summarySlide = pres.addSlide({ masterName: "UCL_MASTER" });
+
+  // Add summary title
+  summarySlide.addText("Summary & Conclusion", {
+    x: 0.5,
+    y: 0.5,
+    w: 9.0,
+    h: 0.8,
+    fontSize: 32,
+    color: input.colors?.main || "#500778",
+    fontFace: "Arial",
+    align: "center",
+    bold: true,
+  });
+
+  // Generate summary content from key points
+  const summaryPoints = input.slides.map(slide => 
+    ({ text: `${slide.title}: Key takeaways reviewed` })
+  );
+
+  // Add final conclusion point
+  summaryPoints.push({ text: "Thank you for your attention!" });
+
+  // Add summary points to slide
+  summarySlide.addText(summaryPoints, {
+    x: 0.5,
+    y: 1.5,
+    w: 9.0,
+    h: 3.0,
+    fontSize: 18,
+    color: "#333333",
+    fontFace: "Arial",
+    bullet: { type: "bullet" },
   });
 };
