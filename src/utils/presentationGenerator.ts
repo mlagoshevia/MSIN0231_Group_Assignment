@@ -14,39 +14,14 @@ export interface PresentationData {
 interface SlideContent {
   title: string;
   points: string[];
-  image?: string;
 }
 
 interface GeminiResponse {
   slides: SlideContent[];
 }
 
-// UCL campus images
-const UCL_IMAGES = [
-  "public/lovable-uploads/acda080f-a4c5-4cfe-bec2-ea5bd50a72a9.png",
-  "public/lovable-uploads/6b83f318-76b7-404a-83ca-9f60be513eb0.png",
-  "public/lovable-uploads/e4b472d5-865e-4cb1-8fec-f80be909c236.png",
-  "public/lovable-uploads/d7b8167b-481f-4054-951f-42e5a4ee01d8.png",
-  "public/lovable-uploads/5938d1c9-574c-44a7-9d45-334cf5ce65ec.png",
-  "public/lovable-uploads/20bba994-fe28-4d19-b7bf-57f9cecc04c5.png",
-  "public/lovable-uploads/91972324-64c1-4c6b-80f7-58d8d483171b.png",
-  "public/lovable-uploads/191fae70-1c3c-4031-9f58-0776a5d9de10.png",
-  "public/lovable-uploads/dc58b3fd-75c7-468e-94be-8dbb433d088d.png",
-  "public/lovable-uploads/acac0ed1-4db7-4b9d-a7ed-4ef3e795d0fc.png",
-  "public/lovable-uploads/aade0ccc-38eb-42d1-b595-9ca4ea4d9984.png",
-  "public/lovable-uploads/d626aca5-5787-4ae5-90e4-08aa2f9f1156.png",
-  "public/lovable-uploads/6b904904-4b1e-445c-bc68-c2e676f71f8e.png",
-  "public/lovable-uploads/702c3a84-29b0-4240-848a-6ea26b3efe60.png"
-];
-
-// UCL logo (last image in the list)
+// UCL logo
 const UCL_LOGO = "public/lovable-uploads/702c3a84-29b0-4240-848a-6ea26b3efe60.png";
-
-// Get a random image from the UCL images collection
-const getRandomImage = (): string => {
-  const randomIndex = Math.floor(Math.random() * (UCL_IMAGES.length - 1)); // Exclude the last image (UCL logo)
-  return UCL_IMAGES[randomIndex];
-};
 
 /**
  * Generate enhanced content using Gemini API
@@ -148,11 +123,8 @@ const enhanceContentWithGemini = async (data: PresentationData): Promise<SlideCo
     // Parse the JSON response
     const geminiResponse = JSON.parse(jsonMatch[0]) as GeminiResponse;
     
-    // Process the slides to add images
-    const slides = geminiResponse.slides.map((slide, index) => ({
-      ...slide,
-      image: getRandomImage()
-    }));
+    // Process the slides
+    const slides = geminiResponse.slides;
     
     return slides;
   } catch (error) {
@@ -178,9 +150,9 @@ const enhanceContentWithLocalAI = (data: PresentationData): SlideContent[] => {
     points: [
       `Welcome to this presentation designed for ${audience}`,
       `Purpose: ${purpose}`,
-      `This presentation covers ${userPoints.length} key points`
-    ],
-    image: getRandomImage()
+      `This presentation covers ${userPoints.length} key points`,
+      `A summary slide is included at the end`
+    ]
   });
 
   // Process each user key point into a content-rich slide
@@ -190,8 +162,7 @@ const enhanceContentWithLocalAI = (data: PresentationData): SlideContent[] => {
     
     slides.push({
       title: point,
-      points: enhancedPoints,
-      image: getRandomImage()
+      points: enhancedPoints
     });
   });
 
@@ -199,8 +170,7 @@ const enhanceContentWithLocalAI = (data: PresentationData): SlideContent[] => {
   const summaryPoints = generateSummaryPoints(userPoints, audience, purpose);
   slides.push({
     title: "Summary",
-    points: summaryPoints,
-    image: getRandomImage()
+    points: summaryPoints
   });
   
   return slides;
@@ -289,127 +259,123 @@ const getTemplateColors = (template: string): { primary: string; secondary: stri
  * Generate a PowerPoint presentation with UCL branding
  */
 export const generatePresentation = async (data: PresentationData): Promise<Blob> => {
-  const slides = await generateSlides(data);
-  const colors = getTemplateColors(data.template);
-  
-  // Create new PowerPoint presentation
-  const pptx = new pptxgen();
-  
-  // Set presentation properties
-  pptx.layout = "LAYOUT_16x9";
-  pptx.author = "UCL Presentation Generator";
-  pptx.title = data.title;
-  pptx.subject = data.purpose;
-  
-  // Create master slide with UCL branding
-  pptx.defineSlideMaster({
-    title: "UCL_MASTER",
-    background: { color: colors.secondary },
-    objects: [
-      // Header
-      { rect: { x: 0, y: 0, w: '100%', h: 0.5, fill: { color: colors.primary } } },
-      // Footer
-      { rect: { x: 0, y: '95%', w: '100%', h: 0.3, fill: { color: colors.primary } } },
-      { text: { text: "UCL Presentation Generator", fontSize: 8, color: "#FFFFFF" } }
-    ]
-  });
-  
-  // Generate each slide
-  slides.forEach((slide, index) => {
-    const pptxSlide = pptx.addSlide({ masterName: "UCL_MASTER" });
+  try {
+    const slides = await generateSlides(data);
+    const colors = getTemplateColors(data.template);
     
-    // Add UCL logo to top left of every slide
-    pptxSlide.addImage({
-      path: UCL_LOGO,
-      x: 0.3,
-      y: 0.3,
-      w: 1,
-      h: 0.4
+    // Create new PowerPoint presentation
+    const pptx = new pptxgen();
+    
+    // Set presentation properties
+    pptx.layout = "LAYOUT_16x9";
+    pptx.author = "UCL Presentation Generator";
+    pptx.title = data.title;
+    pptx.subject = data.purpose;
+    
+    // Create master slide with UCL branding
+    pptx.defineSlideMaster({
+      title: "UCL_MASTER",
+      background: { color: colors.secondary },
+      objects: [
+        // Header
+        { rect: { x: 0, y: 0, w: '100%', h: 0.5, fill: { color: colors.primary } } },
+        // Footer
+        { rect: { x: 0, y: '95%', w: '100%', h: 0.3, fill: { color: colors.primary } } },
+        { text: { text: "UCL Presentation Generator", x: 0.5, y: '95%', w: 4, h: 0.3, fontSize: 8, color: "#FFFFFF" } }
+      ]
     });
     
-    // Add background image for visual interest (semi-transparent)
-    if (slide.image) {
+    // Generate each slide
+    slides.forEach((slide, index) => {
+      const pptxSlide = pptx.addSlide({ masterName: "UCL_MASTER" });
+      
+      // Add UCL logo to top left of every slide
       pptxSlide.addImage({
-        path: slide.image,
-        x: 0,
-        y: 0,
-        w: '100%',
-        h: '100%',
-        transparency: 85, // 85% transparent
-      });
-    }
-    
-    if (index === 0) {
-      // Title slide
-      pptxSlide.addText(slide.title, {
-        x: 1,
-        y: 1.5,
-        w: '80%', 
-        h: 1.5, 
-        fontSize: 44, 
-        color: colors.primary, 
-        bold: true, 
-        align: 'center'
+        path: UCL_LOGO,
+        x: 0.3,
+        y: 0.3,
+        w: 1,
+        h: 0.4,
+        sizing: { type: "contain" }
       });
       
-      // Purpose and audience
-      slide.points.forEach((point, pointIndex) => {
-        pptxSlide.addText(point, {
+      if (index === 0) {
+        // Title slide
+        pptxSlide.addText(slide.title, {
           x: 1,
-          y: 3 + pointIndex * 0.5,
-          w: '80%',
-          fontSize: 20,
-          color: colors.text === "#FFFFFF" ? "#FFFFFF" : colors.primary,
+          y: 1.5,
+          w: '80%', 
+          h: 1.5, 
+          fontSize: 44, 
+          color: colors.primary, 
+          bold: true, 
           align: 'center'
         });
-      });
-      
-      // UCL branding on title slide
-      pptxSlide.addText("University College London", {
-        x: 1,
-        y: 5,
-        w: '80%',
-        fontSize: 14,
-        color: colors.primary,
-        align: 'center'
-      });
-    } else {
-      // Content slides
-      pptxSlide.addText(slide.title, {
-        x: 0.5,
-        y: 0.8,
-        w: '95%',
-        fontSize: 32,
-        color: colors.text === "#FFFFFF" ? "#FFFFFF" : colors.primary,
-        bold: true
-      });
-      
-      // Add bullet points
-      slide.points.forEach((point, pointIndex) => {
-        pptxSlide.addText(point, {
-          x: 0.5,
-          y: 1.8 + pointIndex * 0.7,
-          w: '90%',
-          fontSize: 18,
-          color: colors.text,
-          bullet: { type: 'bullet' }
+        
+        // Purpose and audience
+        slide.points.forEach((point, pointIndex) => {
+          pptxSlide.addText(point, {
+            x: 1,
+            y: 3 + pointIndex * 0.5,
+            w: '80%',
+            fontSize: 20,
+            color: colors.text === "#FFFFFF" ? "#FFFFFF" : colors.primary,
+            align: 'center'
+          });
         });
-      });
-    }
+        
+        // UCL branding on title slide
+        pptxSlide.addText("University College London", {
+          x: 1,
+          y: 5,
+          w: '80%',
+          fontSize: 14,
+          color: colors.primary,
+          align: 'center'
+        });
+      } else {
+        // Content slides
+        pptxSlide.addText(slide.title, {
+          x: 0.5,
+          y: 0.8,
+          w: '95%',
+          fontSize: 32,
+          color: colors.text === "#FFFFFF" ? "#FFFFFF" : colors.primary,
+          bold: true
+        });
+        
+        // Add bullet points
+        slide.points.forEach((point, pointIndex) => {
+          pptxSlide.addText(point, {
+            x: 0.5,
+            y: 1.8 + pointIndex * 0.7,
+            w: '90%',
+            fontSize: 18,
+            color: colors.text,
+            bullet: { type: 'bullet' }
+          });
+        });
+      }
+      
+      // Add slide number to footer (except title slide)
+      if (index > 0) {
+        pptxSlide.addText(`Slide ${index}/${slides.length - 1}`, {
+          x: 'right',
+          y: 'bottom',
+          w: 2,
+          h: 0.3,
+          fontSize: 8,
+          color: "#FFFFFF"
+        });
+      }
+    });
     
-    // Add slide number to footer (except title slide)
-    if (index > 0) {
-      pptxSlide.addText(`Slide ${index}/${slides.length - 1}`, {
-        x: 'right',
-        y: 'bottom',
-        fontSize: 8,
-        color: "#FFFFFF"
-      });
-    }
-  });
-  
-  // Generate the PowerPoint as a Blob
-  return await pptx.write({ outputType: 'blob' }) as Blob;
+    // Generate the PowerPoint as a Blob
+    return await pptx.write({ outputType: 'blob' }) as Blob;
+  } catch (error) {
+    console.error("Error generating presentation:", error);
+    throw new Error(`Failed to generate presentation: ${error instanceof Error ? error.message : String(error)}`);
+  }
 };
 
 /**
