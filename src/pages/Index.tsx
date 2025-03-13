@@ -8,26 +8,26 @@ const UCL_COLOR_PALETTES = [
   // Primary palette
   {
     light: "#E8E3E7",    // Light Purple
-    main: "#9b87f5",     // Primary Purple
-    dark: "#8A1538",     // Dark Purple
+    main: "#8F3F97",     // UCL Purple
+    dark: "#1A1F2C",     // Dark Blue
     green: "#006637",    // UCL Green
     bg: "from-[#E8E3E7] via-white to-[#E8F4EB]"
   },
-  // Secondary palette
+  // Secondary palette with blue
   {
-    light: "#D6BCFA",     // Secondary Light Purple
-    main: "#7E69AB",      // Secondary Purple
-    dark: "#1A1F2C",      // Dark Blue Purple
-    green: "#F2FCE2",     // Soft Green
-    bg: "from-[#D6BCFA] via-white to-[#F2FCE2]"
+    light: "#E5F7FD",    // Light Blue
+    main: "#00AEEF",     // UCL Blue
+    dark: "#1A1F2C",     // Dark Blue
+    green: "#7ABB3B",    // Bright Green
+    bg: "from-[#E5F7FD] via-white to-[#EFF9E4]"
   },
-  // Tertiary palette
+  // Tertiary palette with pink
   {
-    light: "#E5DEFF",     // Soft Purple
-    main: "#8B5CF6",      // Vivid Purple
-    dark: "#6E59A5",      // Tertiary Purple
-    green: "#D3E4FD",     // Soft Blue
-    bg: "from-[#E5DEFF] via-white to-[#D3E4FD]"
+    light: "#FFEDF4",    // Light Pink
+    main: "#EE2E74",     // UCL Pink
+    dark: "#1A1F2C",     // Dark Blue
+    green: "#FFD100",    // UCL Yellow
+    bg: "from-[#FFEDF4] via-white to-[#FFFAE5]"
   }
 ];
 

@@ -26,10 +26,16 @@ export default {
         background: "hsl(var(--background))",
         foreground: "hsl(var(--foreground))",
         ucl: {
-          purple: "#9b87f5",
-          dark: "#1A1F2C",
-          light: "#D6BCFA",
-          green: "#F2FCE2",
+          // UCL official colors
+          purple: "#8F3F97",       // UCL Purple
+          dark: "#1A1F2C",         // Dark Blue
+          light: "#E8E3E7",        // Light Purple
+          green: "#006637",        // UCL Green
+          blue: "#00AEEF",         // UCL Blue
+          brightgreen: "#7ABB3B",  // Bright Green
+          pink: "#EE2E74",         // UCL Pink
+          yellow: "#FFD100",       // UCL Yellow
+          coolred: "#D50032",      // UCL Red
         },
         primary: {
           DEFAULT: "hsl(var(--primary))",
