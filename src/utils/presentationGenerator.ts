@@ -1,4 +1,3 @@
-
 import pptxgen from "pptxgenjs";
 
 // Define presentation data types
@@ -352,21 +351,23 @@ const fileToBase64 = async (file: File): Promise<string> => {
 };
 
 /**
- * Generate layout settings for different slide layouts
+ * Get PowerPoint slide layout options (standard PowerPoint layouts)
+ * This makes sure the "New Slide" button in PowerPoint offers standard layout options
  */
 const getSlideLayoutSettings = (layoutType: SlideLayout): any => {
-  // Define different pptxgenjs slide layouts for each layout type
+  // Use standard PowerPoint slide layouts for better compatibility
+  // These values correspond to pptxgenjs master slide layouts and PowerPoint standard layouts
   switch(layoutType) {
     case SlideLayout.TEXT_ONLY:
-      return { name: "TEXT", isCommon: true }; // Standard layout with text only
+      return {}; // Default standard layout - no specific layout settings
     case SlideLayout.IMAGE_RIGHT:
-      return { name: "TITLE_AND_CONTENT", isCommon: true }; // Title and content with image on right
+      return {}; // Default standard layout with content
     case SlideLayout.IMAGE_LEFT:
-      return { name: "CONTENT_WITH_CAPTION", isCommon: true }; // Content with caption layout (image left)
+      return {}; // Default standard layout with content
     case SlideLayout.IMAGE_BACKGROUND:
-      return { name: "BLANK", isCommon: true }; // Blank layout for full background image
+      return {}; // Default standard layout
     default:
-      return { name: "TEXT", isCommon: true }; // Default to text layout
+      return {}; // Default standard layout
   }
 };
 
@@ -407,10 +408,10 @@ export const generatePresentation = async (data: PresentationData): Promise<Blob
       const keyPoint = keyPointIndex >= 0 ? data.keyPoints[keyPointIndex] : null;
       const hasUploadedImage = keyPoint?.imageFile !== undefined && keyPoint?.imageFile !== null;
       
-      // Get proper slide layout settings based on the layout type
+      // Get standard slide layout settings (not applying any specific master layout override)
       const layoutSettings = getSlideLayoutSettings(layoutType);
       
-      // Create the slide with appropriate layout
+      // Create the slide with appropriate layout - using standard master slide
       const pptxSlide = pptx.addSlide({ 
         masterName: "UCL_MASTER",
         ...layoutSettings
@@ -491,7 +492,7 @@ export const generatePresentation = async (data: PresentationData): Promise<Blob
                   y: 1.8,
                   w: 3,
                   h: 3.5,
-                  sizing: { type: "contain", w: 3, h: 3.5 } // Changed from "cover" to "contain"
+                  sizing: { type: "contain", w: 3, h: 3.5 }
                 });
                 console.log(`Added image for slide ${index}, layout: IMAGE_RIGHT`);
               } catch (error) {
@@ -554,7 +555,7 @@ export const generatePresentation = async (data: PresentationData): Promise<Blob
                   y: 1.8,
                   w: 3,
                   h: 3.5,
-                  sizing: { type: "contain", w: 3, h: 3.5 } // Changed from "cover" to "contain"
+                  sizing: { type: "contain", w: 3, h: 3.5 }
                 });
                 console.log(`Added image for slide ${index}, layout: IMAGE_LEFT`);
               } catch (error) {
@@ -593,56 +594,27 @@ export const generatePresentation = async (data: PresentationData): Promise<Blob
             break;
             
           case SlideLayout.IMAGE_BACKGROUND:
-            // Background image
+            // Background image with 85% transparency overlay
             if (hasUploadedImage && keyPoint?.imageFile) {
               try {
                 // Use the uploaded image as background
                 const imageData = await fileToBase64(keyPoint.imageFile);
                 
-                // First, directly add the image as background
+                // Add the image as background
                 pptxSlide.background = { data: imageData };
                 console.log(`Added background image for slide ${index}`);
                 
-                // Add semi-transparent overlay for better text readability
+                // Add semi-transparent overlay for better text readability - 85% transparency
                 pptxSlide.addShape('rect', {
                   x: 0,
                   y: 0.5,
                   w: '100%',
                   h: '95%',
-                  fill: { color: colors.secondary, transparency: 0.7 }
+                  fill: { color: colors.secondary, transparency: 0.85 }
                 });
               } catch (error) {
                 console.error(`Error adding background image to slide ${index}:`, error);
-                // Image placeholder
-                pptxSlide.addShape('rect', {
-                  x: 0.5,
-                  y: 1,
-                  w: 9,
-                  h: 5,
-                  fill: { color: 'F1F1F1' },
-                  line: { color: 'DDDDDD', width: 1 }
-                });
               }
-            } else {
-              // Image placeholder
-              pptxSlide.addShape('rect', {
-                x: 0.5,
-                y: 1,
-                w: 9,
-                h: 5,
-                fill: { color: 'F1F1F1' },
-                line: { color: 'DDDDDD', width: 1 }
-              });
-              
-              pptxSlide.addText("Background Image", {
-                x: 3,
-                y: 3,
-                w: 4,
-                h: 0.5,
-                align: 'center',
-                color: '888888',
-                fontSize: 14
-              });
             }
             
             // Text overlay with standardized font size
