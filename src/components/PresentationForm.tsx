@@ -19,8 +19,8 @@ import {
   Key, 
   Plus, 
   Trash2,
-  X,
-  Move,
+  ArrowUp,
+  ArrowDown,
   ExternalLink
 } from "lucide-react";
 import { generatePresentation, downloadPresentation } from "@/utils/presentationGenerator";
@@ -230,7 +230,7 @@ const PresentationForm = () => {
                       onClick={() => moveKeyPoint(index, 'up')}
                       disabled={index === 0}
                     >
-                      <Move className="h-3 w-3 rotate-180" />
+                      <ArrowUp className="h-3 w-3" />
                     </Button>
                     <Button 
                       type="button" 
@@ -240,7 +240,7 @@ const PresentationForm = () => {
                       onClick={() => moveKeyPoint(index, 'down')}
                       disabled={index === formData.keyPoints.length - 1}
                     >
-                      <Move className="h-3 w-3" />
+                      <ArrowDown className="h-3 w-3" />
                     </Button>
                   </div>
                   

@@ -342,7 +342,7 @@ export const generatePresentation = async (data: PresentationData): Promise<Blob
         slide.points.forEach((point, pointIndex) => {
           pptxSlide.addText(point, {
             fontSize: 20,
-            color: colors.text === "#FFFFFF" ? "#FFFFFF" : colors.primary,
+            color: colors.text === "#FFFFFF" ? "#FFFFFF" : "#000000",
             align: 'center',
             x: 1,
             y: 3 + pointIndex * 0.5,
@@ -350,22 +350,11 @@ export const generatePresentation = async (data: PresentationData): Promise<Blob
             h: 0.5
           });
         });
-        
-        // UCL branding on title slide
-        pptxSlide.addText("University College London", {
-          fontSize: 14,
-          color: colors.primary,
-          align: 'center',
-          x: 1,
-          y: 5,
-          w: 8,
-          h: 0.5
-        });
       } else {
-        // Content slides
+        // Content slides - Title should use the template color
         pptxSlide.addText(slide.title, {
           fontSize: 32,
-          color: colors.text === "#FFFFFF" ? "#FFFFFF" : colors.primary,
+          color: colors.primary,
           bold: true,
           x: 0.5,
           y: 0.8,
@@ -373,11 +362,11 @@ export const generatePresentation = async (data: PresentationData): Promise<Blob
           h: 0.8
         });
         
-        // Add bullet points
+        // Add bullet points - Body text should be black by default
         slide.points.forEach((point, pointIndex) => {
           pptxSlide.addText(point, {
             fontSize: 18,
-            color: colors.text,
+            color: "#000000",
             bullet: { type: 'bullet' },
             x: 0.5,
             y: 1.8 + pointIndex * 0.7,
@@ -407,7 +396,7 @@ export const generatePresentation = async (data: PresentationData): Promise<Blob
         y: 0,
         w: 1.7,
         h: 0.5,
-        sizing: { type: "contain" }
+        sizing: { type: "contain", w: 1.7, h: 0.5 }
       });
     });
     
