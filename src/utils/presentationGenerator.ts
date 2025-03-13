@@ -287,6 +287,8 @@ const getTemplateColors = (template: string): { primary: string; secondary: stri
       return { primary: "#52C152", secondary: "#E8F4EB", text: "#000000" }; // UCL Vibrant Green
     case "blue":
       return { primary: "#34C6C6", secondary: "#E0F5F5", text: "#000000" }; // UCL Vibrant Blue
+    case "pink":
+      return { primary: "#AC145A", secondary: "#F9E4ED", text: "#000000" }; // UCL Vibrant Pink
     default:
       return { primary: "#500778", secondary: "#E8E3E7", text: "#000000" }; // Default to UCL Purple
   }

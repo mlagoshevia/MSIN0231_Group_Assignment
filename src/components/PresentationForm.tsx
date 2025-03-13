@@ -39,6 +39,7 @@ const TEMPLATE_OPTIONS = [
   { name: "Light Theme", value: "light" },
   { name: "UCL Vibrant Green", value: "green" },
   { name: "UCL Vibrant Blue", value: "blue" },
+  { name: "UCL Vibrant Pink", value: "pink" },
 ];
 
 const PresentationForm = () => {
