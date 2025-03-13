@@ -1,3 +1,4 @@
+
 import React, { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -477,12 +478,6 @@ const PresentationForm = () => {
                   </div>
                 </div>
               ))}
-              
-              {formData.keyPoints.length === 0 && (
-                <div className="text-center py-4 text-gray-500 bg-gray-50 rounded-md">
-                  <p>No key points added yet. Add points below.</p>
-                </div>
-              )}
             </div>
             
             <div className="mt-2">
@@ -542,6 +537,12 @@ const PresentationForm = () => {
                   Add Point
                 </Button>
               </div>
+              
+              {formData.keyPoints.length === 0 && (
+                <div className="text-center py-4 text-gray-500 bg-gray-50 rounded-md mt-4">
+                  <p>No key points added yet</p>
+                </div>
+              )}
               
               <p className="text-xs text-gray-500 mt-1">
                 Each key point will become its own slide. Gemini AI will enhance each point with research and data.

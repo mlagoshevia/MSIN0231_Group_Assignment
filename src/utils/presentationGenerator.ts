@@ -556,7 +556,7 @@ export const generatePresentation = async (data: PresentationData): Promise<Blob
                 y: 0.5,
                 w: '100%',
                 h: '95%',
-                sizing: { type: "cover" }
+                sizing: { type: "cover", w: "100%", h: "100%" }
               });
               
               // Add semi-transparent overlay for better text readability
