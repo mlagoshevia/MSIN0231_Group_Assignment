@@ -43,8 +43,8 @@ export const generatePresentation = async (
 
   try {
     // Return the PPTX as a blob
-    // The correct way to get a blob from pptxgenjs
-    const blob = await pres.writeFile({ outputType: "blob" }) as unknown as Blob;
+    // Writing the file as a blob - using the proper API according to pptxgenjs docs
+    const blob = await pres.write({ outputType: "blob" }) as unknown as Blob;
     return blob;
   } catch (error) {
     console.error("Error generating presentation:", error);
@@ -95,8 +95,8 @@ const createMasterSlide = (
       {
         text: {
           text: "UCL Presentation Generator",
-          x: 0.3,  // Position on the left side
-          y: 5.0,  // Position at the bottom
+          left: 0.3,  // Position on the left side
+          top: 5.0,  // Position at the bottom
           w: 3.0,  
           h: 0.5,
           color: darkColor,
@@ -122,6 +122,9 @@ const createMasterSlide = (
 
 // Function to generate the cover slide
 const generateCoverSlide = (pres: pptxgen, input: PresentationInput) => {
+  // Get the colors or use defaults
+  const accentColor = input.colors?.accent || "#52C152"; // Default UCL accent green
+  
   // Get repository images for random selection
   const repoImages = [
     "/lovable-uploads/191fae70-1c3c-4031-9f58-0776a5d9de10.png",
