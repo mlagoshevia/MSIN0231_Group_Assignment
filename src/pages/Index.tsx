@@ -16,27 +16,16 @@ const Index = () => {
   // Text color state
   const [textColor, setTextColor] = useState("text-ucl-dark");
   
-  // Accent color for purple text elements
+  // Accent color for purple text elements - always UCL purple
   const [accentColor, setAccentColor] = useState("#500778");
-  
-  // Store the random color index
-  const [colorIndex, setColorIndex] = useState(0);
 
   useEffect(() => {
     // Choose a random background color
     const randomIndex = Math.floor(Math.random() * backgroundColors.length);
-    setColorIndex(randomIndex);
     setBackgroundGradient(backgroundColors[randomIndex]);
     
     // Set text color for better contrast
     setTextColor("text-ucl-dark");
-    
-    // Set accent color based on background
-    if (randomIndex === 1) { // If beige background is selected
-      setAccentColor("#FFCA36"); // Gold accent for beige background
-    } else {
-      setAccentColor("#500778"); // Purple accent for purple background
-    }
   }, []);
 
   return (
@@ -67,7 +56,7 @@ const Index = () => {
             </p>
           </div>
         </div>
-        <PresentationForm colorTheme={accentColor} />
+        <PresentationForm />
       </div>
     </div>
   );
