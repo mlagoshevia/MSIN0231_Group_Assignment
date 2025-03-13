@@ -1,3 +1,4 @@
+
 import pptxgen from "pptxgenjs";
 
 // Define presentation data types
@@ -58,7 +59,7 @@ const enhanceContentWithGemini = async (data: PresentationData): Promise<SlideCo
       - 1 Summary/conclusion slide
       
       For each content slide:
-      1. Use the exact key point as the slide title
+      1. Create a compelling slide title based on the key point (but don't just repeat the key point)
       2. Provide 3-5 bullet points that expand on that specific key point with research, data, and insights
       
       Format the response as valid JSON with this structure:
@@ -156,11 +157,14 @@ const enhanceContentWithLocalAI = (data: PresentationData): SlideContent[] => {
 
   // Process each user key point into a content-rich slide
   userPoints.forEach((point, index) => {
-    // Generate AI-enhanced content based on the bullet point
+    // Generate a slide title based on the key point
+    const slideTitle = generateSlideTitle(point, index + 1);
+    
+    // Generate AI-enhanced content based on the key point
     const enhancedPoints = generateEnhancedPoints(point, audience, purpose);
     
     slides.push({
-      title: point,
+      title: slideTitle,
       points: enhancedPoints
     });
   });
@@ -176,11 +180,47 @@ const enhanceContentWithLocalAI = (data: PresentationData): SlideContent[] => {
 };
 
 /**
+ * Generate a slide title based on a key point
+ */
+const generateSlideTitle = (keyPoint: string, slideNumber: number): string => {
+  // Create more engaging titles based on the key point
+  const keywords = keyPoint.toLowerCase().split(' ');
+  
+  if (keywords.includes('introduction') || keywords.includes('overview')) {
+    return 'Setting the Stage';
+  } else if (keywords.includes('benefits') || keywords.includes('advantages')) {
+    return 'Value Proposition';
+  } else if (keywords.includes('challenges') || keywords.includes('problems')) {
+    return 'Addressing Challenges';
+  } else if (keywords.includes('solution') || keywords.includes('approach')) {
+    return 'Our Solution';
+  } else if (keywords.includes('results') || keywords.includes('outcomes')) {
+    return 'Achieving Results';
+  } else if (keywords.includes('future') || keywords.includes('next')) {
+    return 'Looking Ahead';
+  } else if (keywords.includes('data') || keywords.includes('statistics')) {
+    return 'Data Insights';
+  } else if (keywords.includes('examples') || keywords.includes('case')) {
+    return 'Case Studies';
+  } else if (keywords.includes('strategy') || keywords.includes('plan')) {
+    return 'Strategic Approach';
+  } else if (keywords.includes('team') || keywords.includes('people')) {
+    return 'The Team';
+  } else {
+    // Generic title based on slide number
+    return `Key Insight ${slideNumber}`;
+  }
+};
+
+/**
  * Generate enhanced bullet points for a slide based on a key point
  */
 const generateEnhancedPoints = (point: string, audience: string, purpose: string): string[] => {
   const enhancedPoints: string[] = [];
   const keywords = point.split(' ').filter(word => word.length > 4);
+  
+  // First point references the original key point
+  enhancedPoints.push(`Key point: ${point}`);
   
   // Generate contextual bullet points based on the main point
   if (audience.toLowerCase().includes('academics') || audience.toLowerCase().includes('researchers')) {
@@ -204,9 +244,6 @@ const generateEnhancedPoints = (point: string, audience: string, purpose: string
   } else if (point.toLowerCase().includes('reduce') || point.toLowerCase().includes('decrease')) {
     enhancedPoints.push(`Potential for 32% reduction in negative impacts`);
   }
-  
-  // Add implementation details
-  enhancedPoints.push(`Implementation requires careful planning and execution`);
   
   // Add a question to engage the audience
   enhancedPoints.push(`How could this impact your specific situation?`);
@@ -280,23 +317,13 @@ export const generatePresentation = async (data: PresentationData): Promise<Blob
         { rect: { x: 0, y: 0, w: '100%', h: 0.5, fill: { color: colors.primary } } },
         // Footer
         { rect: { x: 0, y: '95%', w: '100%', h: 0.3, fill: { color: colors.primary } } },
-        { text: { text: "UCL Presentation Generator", fontSize: 8, color: "#FFFFFF", y: 6.7, x: 0.5, w: 4, h: 0.3 } }
+        { text: { text: "UCL Presentation Generator", x: 0.5, y: 6.7, w: 4, h: 0.3, color: "#FFFFFF", fontFace: "Arial", fontSize: 8 } }
       ]
     });
     
     // Generate each slide
     slides.forEach((slide, index) => {
       const pptxSlide = pptx.addSlide({ masterName: "UCL_MASTER" });
-      
-      // Add UCL logo to top left of every slide (LAST action as requested)
-      pptxSlide.addImage({
-        path: UCL_LOGO,
-        x: 0.3,
-        y: 0.3,
-        w: 1,
-        h: 0.4,
-        sizing: { type: "contain", w: 1, h: 0.4 }
-      });
       
       if (index === 0) {
         // Title slide
@@ -363,6 +390,7 @@ export const generatePresentation = async (data: PresentationData): Promise<Blob
       // Add slide number to footer (except title slide)
       if (index > 0) {
         pptxSlide.addText(`Slide ${index}/${slides.length - 1}`, {
+          fontFace: "Arial",
           fontSize: 8,
           color: "#FFFFFF",
           x: 8,
@@ -371,6 +399,16 @@ export const generatePresentation = async (data: PresentationData): Promise<Blob
           h: 0.3
         });
       }
+      
+      // Add UCL logo to top left of every slide (LAST action as requested)
+      pptxSlide.addImage({
+        path: UCL_LOGO,
+        x: 0.3,
+        y: 0.3,
+        w: 1,
+        h: 0.4,
+        sizing: { type: "contain", w: 1, h: 0.4 }
+      });
     });
     
     // Generate the PowerPoint as a Blob
@@ -394,4 +432,3 @@ export const downloadPresentation = (blob: Blob, filename: string): void => {
   document.body.removeChild(link);
   URL.revokeObjectURL(url);
 };
-
