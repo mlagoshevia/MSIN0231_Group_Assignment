@@ -4,31 +4,20 @@ import PresentationForm from "@/components/PresentationForm";
 import { Sparkles } from "lucide-react";
 
 const Index = () => {
-  // Define available background colors with new color palette
-  const backgroundColors = [
-    "from-[#B6DCE5] via-white to-[#B6DCE5]/50", // Light blue background
-    "from-[#C9D1A8] via-[#C9D1A8]/40 to-[#C9D1A8]/20", // Light green background
-    "from-[#C6B0BC] via-[#C6B0BC]/40 to-[#C6B0BC]/20", // Light purple background
-  ];
+  // Set a fixed background color - light purple only
+  const backgroundColor = "from-[#C6B0BC] via-[#C6B0BC]/40 to-[#C6B0BC]/20";
 
   // State to hold the selected background color
   const [backgroundGradient, setBackgroundGradient] = useState("");
   
-  // Text color state (for contrast with backgrounds)
+  // Text color state
   const [textColor, setTextColor] = useState("text-ucl-dark");
-  
-  // Store the randomIndex in state so it's accessible throughout the component
-  const [colorIndex, setColorIndex] = useState(0);
 
   useEffect(() => {
-    // Choose a random background color
-    const randomIndex = Math.floor(Math.random() * backgroundColors.length);
-    const selectedGradient = backgroundColors[randomIndex];
-    setBackgroundGradient(selectedGradient);
-    setColorIndex(randomIndex); // Store the index in state
+    // Use the single fixed background color
+    setBackgroundGradient(backgroundColor);
     
-    // Set text color based on the background for better contrast
-    // All new colors are light enough for dark text
+    // Set text color for better contrast
     setTextColor("text-ucl-dark");
   }, []);
 
@@ -46,7 +35,7 @@ const Index = () => {
       <div className="p-4 max-w-4xl mx-auto">
         <div className="flex flex-col items-center mb-8 animate-slide-up">
           <div className="text-center">
-            <div className={`inline-flex items-center px-3 py-1 bg-ucl-purple/10 text-ucl-purple rounded-full text-sm mb-3`}>
+            <div className={`inline-flex items-center px-3 py-1 bg-[#500778]/10 text-[#500778] rounded-full text-sm mb-3`}>
               <Sparkles className="h-3.5 w-3.5 mr-1" />
               <span>AI-Powered UCL Presentation Generator</span>
             </div>

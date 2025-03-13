@@ -26,7 +26,7 @@ export default {
         background: "hsl(var(--background))",
         foreground: "hsl(var(--foreground))",
         ucl: {
-          purple: "#9b87f5",
+          purple: "#500778",
           dark: "#1A1F2C",
           light: "#D6BCFA",
           green: "#F2FCE2",
