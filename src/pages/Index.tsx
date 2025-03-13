@@ -4,21 +4,39 @@ import PresentationForm from "@/components/PresentationForm";
 import { Sparkles } from "lucide-react";
 
 const Index = () => {
-  // Set a fixed background color - light purple only
-  const backgroundColor = "from-[#C6B0BC] via-[#C6B0BC]/40 to-[#C6B0BC]/20";
+  // Define background color options
+  const backgroundColors = [
+    "from-[#C6B0BC] via-[#C6B0BC]/40 to-[#C6B0BC]/20", // Light purple
+    "from-[#DAD6CA] via-[#DAD6CA]/40 to-[#DAD6CA]/20", // Beige
+  ];
 
   // State to hold the selected background color
   const [backgroundGradient, setBackgroundGradient] = useState("");
   
   // Text color state
   const [textColor, setTextColor] = useState("text-ucl-dark");
+  
+  // Accent color for purple text elements
+  const [accentColor, setAccentColor] = useState("");
+  
+  // Store the random color index
+  const [colorIndex, setColorIndex] = useState(0);
 
   useEffect(() => {
-    // Use the single fixed background color
-    setBackgroundGradient(backgroundColor);
+    // Choose a random background color
+    const randomIndex = Math.floor(Math.random() * backgroundColors.length);
+    setColorIndex(randomIndex);
+    setBackgroundGradient(backgroundColors[randomIndex]);
     
     // Set text color for better contrast
     setTextColor("text-ucl-dark");
+    
+    // Set accent color based on background
+    if (randomIndex === 1) { // If beige background is selected
+      setAccentColor("#FFCA36"); // Gold accent for beige background
+    } else {
+      setAccentColor("#500778"); // Purple accent for purple background
+    }
   }, []);
 
   return (
@@ -35,7 +53,7 @@ const Index = () => {
       <div className="p-4 max-w-4xl mx-auto">
         <div className="flex flex-col items-center mb-8 animate-slide-up">
           <div className="text-center">
-            <div className={`inline-flex items-center px-3 py-1 bg-[#500778]/10 text-[#500778] rounded-full text-sm mb-3`}>
+            <div className={`inline-flex items-center px-3 py-1 bg-[${accentColor}]/10 text-[${accentColor}] rounded-full text-sm mb-3`}>
               <Sparkles className="h-3.5 w-3.5 mr-1" />
               <span>AI-Powered UCL Presentation Generator</span>
             </div>
@@ -48,7 +66,7 @@ const Index = () => {
             </p>
           </div>
         </div>
-        <PresentationForm />
+        <PresentationForm colorTheme={accentColor} />
       </div>
     </div>
   );
