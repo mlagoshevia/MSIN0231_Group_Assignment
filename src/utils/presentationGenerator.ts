@@ -21,7 +21,8 @@ interface GeminiResponse {
 }
 
 // UCL white logo - ONLY FOR PRESENTATIONS
-const UCL_LOGO = "public/lovable-uploads/9b11400a-51d4-4e56-81cd-7ec98fdbe988.png";
+// Fixed path to use the correct format for image loading
+const UCL_LOGO = "/lovable-uploads/9b11400a-51d4-4e56-81cd-7ec98fdbe988.png";
 
 /**
  * Generate enhanced content using Gemini API
