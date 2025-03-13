@@ -325,7 +325,7 @@ export const generatePresentation = async (data: PresentationData): Promise<Blob
       // Footer
       { rect: { x: 0, y: '95%', w: '100%', h: 0.3, fill: { color: colors.primary } } },
       // Footer text
-      { text: { text: "UCL Presentation Generator", x: 0.5, y: "95%", w: "100%", fontSize: 8, color: "FFFFFF" } }
+      { text: { text: "UCL Presentation Generator", y: "95%", w: "100%", align: "left", fontSize: 8, color: "FFFFFF", margin: [0.5, 0, 0, 0] } }
     ]
   });
   
@@ -340,7 +340,7 @@ export const generatePresentation = async (data: PresentationData): Promise<Blob
       y: 0.05,
       w: 1,
       h: 0.4,
-      sizing: { type: "contain", w: 1, h: 0.4 }
+      sizing: { type: "contain" }
     });
     
     // Add background image for visual interest (semi-transparent) - maintain aspect ratio
@@ -351,7 +351,7 @@ export const generatePresentation = async (data: PresentationData): Promise<Blob
         y: 0,
         w: '100%',
         h: '100%',
-        sizing: { type: "cover", w: '100%', h: '100%' },
+        sizing: { type: "cover" },
         transparency: 85, // 85% transparent
       });
     }
@@ -359,9 +359,8 @@ export const generatePresentation = async (data: PresentationData): Promise<Blob
     if (index === 0) {
       // Title slide
       pptxSlide.addText(slide.title, {
-        x: 1,
         y: 1.5,
-        w: '80%', 
+        w: '100%', 
         h: 1.5, 
         align: 'center',
         bold: true,
@@ -373,9 +372,8 @@ export const generatePresentation = async (data: PresentationData): Promise<Blob
       const yPositionIncrement = 0.7; // Increased spacing between text elements
       slide.points.forEach((point, pointIndex) => {
         pptxSlide.addText(point, {
-          x: 1,
           y: 3 + pointIndex * yPositionIncrement,
-          w: '80%',
+          w: '100%',
           align: 'center',
           color: colors.text === "#FFFFFF" ? "#FFFFFF" : colors.primary,
           fontSize: 20
@@ -384,9 +382,8 @@ export const generatePresentation = async (data: PresentationData): Promise<Blob
       
       // UCL branding on title slide
       pptxSlide.addText("University College London", {
-        x: 1,
         y: 5.5,
-        w: '80%',
+        w: '100%',
         align: 'center',
         color: colors.primary,
         fontSize: 14
@@ -394,9 +391,9 @@ export const generatePresentation = async (data: PresentationData): Promise<Blob
     } else {
       // Content slides
       pptxSlide.addText(slide.title, {
-        x: 0.5,
+        x: 2, // Move right to avoid overlapping with UCL logo
         y: 0.8,
-        w: '90%',
+        w: '85%', // Reduce width to avoid overflow
         bold: true,
         color: colors.text === "#FFFFFF" ? "#FFFFFF" : colors.primary,
         fontSize: 32
@@ -407,22 +404,30 @@ export const generatePresentation = async (data: PresentationData): Promise<Blob
       const yPositionIncrement = 0.8; // Increased spacing between points
       
       slide.points.forEach((point, pointIndex) => {
-        pptxSlide.addText(point, {
-          x: 0.5,
-          y: yStartPosition + pointIndex * yPositionIncrement,
-          w: '90%',
-          bullet: { type: 'bullet' },
-          color: colors.text,
-          fontSize: 18
-        });
+        // Limit number of bullet points to prevent overflow
+        if (pointIndex < 5) {
+          pptxSlide.addText(point, {
+            x: 2, // Move right to ensure consistent alignment
+            y: yStartPosition + pointIndex * yPositionIncrement,
+            w: '85%', // Reduce width to prevent text overflow
+            bullet: { type: 'bullet' },
+            color: colors.text,
+            fontSize: 18,
+            breakLine: true, // Enable text wrapping
+            wrap: true,
+            fit: 'shrink' // Shrink text if needed to fit
+          });
+        }
       });
     }
     
     // Add slide number to footer (except title slide)
     if (index > 0) {
       pptxSlide.addText(`Slide ${index}/${slides.length - 1}`, {
-        x: pptx.presLayout.width - 1.5, // Position from right
+        x: pptx.presLayout.width - 2, // Position from right
         y: pptx.presLayout.height - 0.5, // Position from bottom
+        w: 1.5,
+        align: 'right',
         color: "#FFFFFF",
         fontSize: 8
       });
