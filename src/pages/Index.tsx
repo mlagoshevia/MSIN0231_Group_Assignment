@@ -9,7 +9,7 @@ const Index = () => {
       {/* Black banner with logo at right */}
       <div className="w-full bg-black py-3 px-4 flex justify-end">
         <img 
-          src="/lovable-uploads/702c3a84-29b0-4240-848a-6ea26b3efe60.png" 
+          src="/lovable-uploads/acac0ed1-4db7-4b9d-a7ed-4ef3e795d0fc.png" 
           alt="UCL Logo" 
           className="h-10"
         />
