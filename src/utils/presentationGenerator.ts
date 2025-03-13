@@ -608,17 +608,16 @@ export const generatePresentation = async (data: PresentationData): Promise<Blob
                 pptxSlide.background = { data: imageData };
                 
                 // 4. Add the semi-transparent overlay shape
-                // This must be added AFTER setting the background
-                // Make it smaller than the slide to not cover header/footer
+                // Using 15% transparency (85% opaque)
                 pptxSlide.addShape('rect', {
                   x: 0,
                   y: 0.5, // Start below the header
                   w: '100%',
                   h: '94.5%', // End above the footer
-                  fill: { color: "FFFFFF", transparency: 85 } // Note: pptxgenjs uses 0-100 scale for transparency
+                  fill: { color: "FFFFFF", transparency: 15 } // 15% transparency (85% opaque)
                 });
                 
-                console.log(`Added background image for slide ${index} with transparent overlay`);
+                console.log(`Added background image for slide ${index} with 15% transparent overlay`);
               } catch (error) {
                 console.error(`Error adding background image to slide ${index}:`, error);
               }
@@ -714,3 +713,4 @@ export const downloadPresentation = (blob: Blob, filename: string): void => {
   document.body.removeChild(link);
   URL.revokeObjectURL(url);
 };
+
