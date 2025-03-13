@@ -13,7 +13,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/components/ui/use-toast";
-import { Loader2, Download, Sparkles } from "lucide-react";
+import { Loader2, Download, Sparkles, Key } from "lucide-react";
 import { generatePresentation, downloadPresentation } from "@/utils/presentationGenerator";
 
 const AUDIENCE_OPTIONS = [
@@ -36,6 +36,7 @@ const PresentationForm = () => {
   const [loading, setLoading] = useState(false);
   const [presentationBlob, setPresentationBlob] = useState<Blob | null>(null);
   const [generatingAI, setGeneratingAI] = useState(false);
+  const [showApiKey, setShowApiKey] = useState(false);
   const [formData, setFormData] = useState({
     title: "",
     bulletPoints: "",
@@ -43,6 +44,7 @@ const PresentationForm = () => {
     purpose: "",
     template: "",
     slideCount: 5,
+    apiKey: "",
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -51,51 +53,39 @@ const PresentationForm = () => {
     setPresentationBlob(null);
     
     // Log the form data
-    console.log("Form submitted:", formData);
+    console.log("Form submitted:", { 
+      ...formData, 
+      apiKey: formData.apiKey ? "********" : "" // Hide API key in logs
+    });
     
     try {
       // Start the AI generation process
       setGeneratingAI(true);
       toast({
         title: "AI is crafting your presentation",
-        description: "Analyzing your inputs and generating enhanced content...",
+        description: "Connecting to Gemini API and generating enhanced content...",
         duration: 3000,
       });
       
-      // Simulate AI processing time - would be a real API call in production
-      setTimeout(() => {
-        try {
-          // Generate the presentation with AI-enhanced content
-          const pptxBlob = generatePresentation(formData);
-          setPresentationBlob(pptxBlob);
-          
-          // Show success toast
-          toast({
-            title: "PowerPoint generated!",
-            description: `Your "${formData.title}" presentation has been created with AI-enhanced content.`,
-            duration: 5000,
-          });
-        } catch (error) {
-          console.error("Error in AI generation:", error);
-          toast({
-            title: "AI generation failed",
-            description: "There was an error enhancing your content. Please try again.",
-            variant: "destructive",
-          });
-        } finally {
-          setGeneratingAI(false);
-        }
-      }, 2000);
+      // Generate the presentation with Gemini-enhanced content
+      const pptxBlob = await generatePresentation(formData);
+      setPresentationBlob(pptxBlob);
       
-    } catch (error) {
-      console.error("Error generating presentation:", error);
-      // Show error toast
+      // Show success toast
       toast({
-        title: "Generation failed",
-        description: "There was an error generating your PowerPoint. Please try again.",
+        title: "PowerPoint generated!",
+        description: `Your "${formData.title}" presentation has been created with Gemini-enhanced content.`,
+        duration: 5000,
+      });
+    } catch (error) {
+      console.error("Error in AI generation:", error);
+      toast({
+        title: "AI generation failed",
+        description: error instanceof Error ? error.message : "There was an error enhancing your content. Please try again.",
         variant: "destructive",
       });
     } finally {
+      setGeneratingAI(false);
       setLoading(false);
     }
   };
@@ -148,7 +138,7 @@ const PresentationForm = () => {
 
           <div>
             <Label htmlFor="bulletPoints" className="text-sm font-medium">
-              Key Points (AI will enhance these)
+              Key Points (Gemini AI will enhance these)
             </Label>
             <Textarea
               id="bulletPoints"
@@ -244,6 +234,37 @@ const PresentationForm = () => {
               className="w-full h-2 bg-ucl-purple/20 rounded-lg appearance-none cursor-pointer mt-2"
             />
           </div>
+
+          <div className="relative">
+            <Label htmlFor="apiKey" className="text-sm font-medium flex items-center gap-1">
+              <Key className="h-3.5 w-3.5" />
+              Gemini API Key
+            </Label>
+            <div className="relative mt-1">
+              <Input
+                id="apiKey"
+                type={showApiKey ? "text" : "password"}
+                value={formData.apiKey}
+                onChange={(e) =>
+                  setFormData({ ...formData, apiKey: e.target.value })
+                }
+                className="pr-24"
+                placeholder="Enter your Gemini API key"
+              />
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className="absolute right-1 top-1/2 -translate-y-1/2 h-7 text-xs"
+                onClick={() => setShowApiKey(!showApiKey)}
+              >
+                {showApiKey ? "Hide" : "Show"}
+              </Button>
+            </div>
+            <p className="text-xs text-gray-500 mt-1">
+              Get a Gemini API key from the Google AI Developer Console. If no key is provided, simple AI enhancement will be used.
+            </p>
+          </div>
         </div>
 
         <div className="mt-6 space-y-4">
@@ -260,7 +281,7 @@ const PresentationForm = () => {
             ) : generatingAI ? (
               <>
                 <Sparkles className="mr-2 h-4 w-4 animate-pulse" />
-                AI Enhancing Content...
+                Gemini AI Enhancing Content...
               </>
             ) : (
               <>

@@ -1,3 +1,4 @@
+
 import pptxgen from "pptxgenjs";
 
 // Define presentation data types
@@ -8,11 +9,16 @@ export interface PresentationData {
   purpose: string;
   template: string;
   slideCount: number;
+  apiKey?: string; // Optional Gemini API key
 }
 
 interface SlideContent {
   title: string;
   points: string[];
+}
+
+interface GeminiResponse {
+  slides: SlideContent[];
 }
 
 /**
@@ -27,9 +33,172 @@ const parseBulletPoints = (bulletPointsText: string): string[] => {
 };
 
 /**
- * Generate enhanced content for a presentation using AI-like techniques
+ * Generate enhanced content using Gemini API
  */
-const enhanceContentWithAI = (data: PresentationData): SlideContent[] => {
+const enhanceContentWithGemini = async (data: PresentationData): Promise<SlideContent[]> => {
+  if (!data.apiKey) {
+    console.log("No Gemini API key provided, using local enhancement");
+    return enhanceContentWithLocalAI(data);
+  }
+  
+  try {
+    const userPoints = parseBulletPoints(data.bulletPoints);
+    
+    // Prepare the prompt for Gemini
+    const prompt = {
+      title: data.title,
+      points: userPoints,
+      audience: data.audience,
+      purpose: data.purpose,
+      slideCount: data.slideCount
+    };
+    
+    // The structured prompt text
+    const promptText = `
+      Create a detailed presentation outline with the following parameters:
+      Title: "${data.title}"
+      Purpose: "${data.purpose}"
+      Target Audience: "${data.audience}"
+      Key Points: 
+      ${userPoints.map(point => `- ${point}`).join('\n')}
+      
+      Please generate a presentation with exactly ${data.slideCount} slides, including:
+      - Title slide
+      - Agenda slide
+      - Content slides based on the key points
+      - Summary slide
+      - Next steps slide
+      
+      For each slide, provide:
+      1. A clear, concise title
+      2. 3-5 bullet points of content
+      
+      Format the response as valid JSON with this structure:
+      {
+        "slides": [
+          {
+            "title": "Slide Title",
+            "points": ["Point 1", "Point 2", "Point 3"]
+          }
+        ]
+      }
+    `;
+    
+    console.log("Sending request to Gemini API");
+    
+    // Call Gemini API
+    const response = await fetch("https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:generateContent", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-goog-api-key": data.apiKey
+      },
+      body: JSON.stringify({
+        contents: [
+          {
+            parts: [
+              {
+                text: promptText
+              }
+            ]
+          }
+        ],
+        generationConfig: {
+          temperature: 0.7,
+          maxOutputTokens: 4096
+        }
+      })
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      console.error("Gemini API error:", errorData);
+      throw new Error(`Gemini API error: ${errorData.error?.message || response.statusText}`);
+    }
+    
+    const result = await response.json();
+    console.log("Gemini API response received");
+    
+    // Extract the text content from Gemini response
+    const content = result.candidates[0]?.content?.parts[0]?.text;
+    if (!content) {
+      throw new Error("No content returned from Gemini API");
+    }
+    
+    // Extract the JSON part from the response
+    const jsonMatch = content.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) {
+      throw new Error("Could not parse JSON from Gemini response");
+    }
+    
+    // Parse the JSON response
+    const geminiResponse = JSON.parse(jsonMatch[0]) as GeminiResponse;
+    
+    // Make sure we have the requested number of slides, adjusting if necessary
+    const slides = geminiResponse.slides;
+    if (slides.length < data.slideCount) {
+      console.log(`Gemini returned ${slides.length} slides, adding more to reach ${data.slideCount}`);
+      // Add more slides if needed
+      const additionalSlides = generateAdditionalSlides(
+        data.slideCount - slides.length,
+        userPoints,
+        data.audience
+      );
+      slides.push(...additionalSlides);
+    } else if (slides.length > data.slideCount) {
+      console.log(`Gemini returned ${slides.length} slides, trimming to ${data.slideCount}`);
+      // Trim slides to match requested count
+      return slides.slice(0, data.slideCount);
+    }
+    
+    return slides;
+  } catch (error) {
+    console.error("Error using Gemini API:", error);
+    console.log("Falling back to local enhancement");
+    // Fallback to local enhancement if Gemini API fails
+    return enhanceContentWithLocalAI(data);
+  }
+};
+
+/**
+ * Generate additional slides if needed to meet the requested count
+ */
+const generateAdditionalSlides = (count: number, userPoints: string[], audience: string): SlideContent[] => {
+  const additionalSlides: SlideContent[] = [];
+  
+  for (let i = 0; i < count && i < userPoints.length; i++) {
+    const point = userPoints[i];
+    additionalSlides.push({
+      title: `Additional Details: ${point}`,
+      points: [
+        `Further analysis of ${point}`,
+        `Impact on ${audience}`,
+        `Implementation considerations`,
+        `Future directions`
+      ]
+    });
+  }
+  
+  // If we still need more slides, add generic ones
+  while (additionalSlides.length < count) {
+    additionalSlides.push({
+      title: "Additional Considerations",
+      points: [
+        "Further research opportunities",
+        "Potential challenges and mitigation strategies",
+        "Timeline for implementation",
+        "Resource requirements"
+      ]
+    });
+  }
+  
+  return additionalSlides;
+};
+
+/**
+ * Local AI-like enhancement as fallback
+ */
+const enhanceContentWithLocalAI = (data: PresentationData): SlideContent[] => {
   const userPoints = parseBulletPoints(data.bulletPoints);
   const slides: SlideContent[] = [];
   const audience = data.audience;
@@ -183,9 +352,9 @@ const generateSummaryPoints = (points: string[], audience: string, purpose: stri
 /**
  * Generate slide contents from bullet points
  */
-const generateSlides = (data: PresentationData): SlideContent[] => {
-  // Use AI-enhanced content generation
-  return enhanceContentWithAI(data);
+const generateSlides = async (data: PresentationData): Promise<SlideContent[]> => {
+  // Use Gemini API if API key is provided
+  return await enhanceContentWithGemini(data);
 };
 
 /**
@@ -209,8 +378,8 @@ const getTemplateColors = (template: string): { primary: string; secondary: stri
 /**
  * Generate a PowerPoint presentation with UCL branding
  */
-export const generatePresentation = (data: PresentationData): Blob => {
-  const slides = generateSlides(data);
+export const generatePresentation = async (data: PresentationData): Promise<Blob> => {
+  const slides = await generateSlides(data);
   const colors = getTemplateColors(data.template);
   
   // Create new PowerPoint presentation
