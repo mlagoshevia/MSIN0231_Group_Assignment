@@ -1,4 +1,3 @@
-
 import pptxgen from "pptxgenjs";
 
 // Define presentation data types
@@ -401,7 +400,7 @@ export const generatePresentation = async (data: PresentationData): Promise<Blob
       { rect: { x: 0, y: 0, w: '100%', h: 0.5, fill: { color: colors.primary } } },
       // Footer
       { rect: { x: 0, y: '95%', w: '100%', h: 0.3, fill: { color: colors.primary } } },
-      { text: { text: "UCL Presentation Generator", x: 0.5, y: '96.5%', w: 4, color: "#FFFFFF", fontSize: 8 } }
+      { text: { text: "UCL Presentation Generator", w: 4, color: "#FFFFFF", fontSize: 8 } }
     ]
   });
   
@@ -412,8 +411,6 @@ export const generatePresentation = async (data: PresentationData): Promise<Blob
     if (index === 0) {
       // Title slide
       pptxSlide.addText(slide.title, {
-        x: '10%', 
-        y: '40%', 
         w: '80%', 
         h: 1.5, 
         fontSize: 44, 
@@ -425,8 +422,6 @@ export const generatePresentation = async (data: PresentationData): Promise<Blob
       // Purpose and audience
       slide.points.forEach((point, pointIndex) => {
         pptxSlide.addText(point, {
-          x: '10%',
-          y: `${50 + (pointIndex * 8)}%`,
           w: '80%',
           fontSize: 20,
           color: colors.text === "#FFFFFF" ? "#FFFFFF" : colors.primary,
@@ -436,8 +431,6 @@ export const generatePresentation = async (data: PresentationData): Promise<Blob
       
       // UCL branding on title slide
       pptxSlide.addText("University College London", {
-        x: '10%',
-        y: '85%',
         w: '80%',
         fontSize: 14,
         color: colors.primary,
@@ -446,8 +439,6 @@ export const generatePresentation = async (data: PresentationData): Promise<Blob
     } else {
       // Content slides
       pptxSlide.addText(slide.title, {
-        x: 0.5,
-        y: 0.7,
         w: '95%',
         fontSize: 32,
         color: colors.text === "#FFFFFF" ? "#FFFFFF" : colors.primary,
@@ -457,8 +448,6 @@ export const generatePresentation = async (data: PresentationData): Promise<Blob
       // Add bullet points
       slide.points.forEach((point, pointIndex) => {
         pptxSlide.addText(point, {
-          x: 0.7,
-          y: 1.5 + (pointIndex * 0.6),
           w: '90%',
           fontSize: 18,
           color: colors.text,
@@ -470,8 +459,6 @@ export const generatePresentation = async (data: PresentationData): Promise<Blob
     // Add slide number to footer (except title slide)
     if (index > 0) {
       pptxSlide.addText(`Slide ${index + 1}/${slides.length}`, {
-        x: '85%',
-        y: '96.5%',
         w: 2,
         color: "#FFFFFF",
         fontSize: 8
