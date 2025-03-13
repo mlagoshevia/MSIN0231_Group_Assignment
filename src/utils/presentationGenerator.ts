@@ -352,6 +352,25 @@ const fileToBase64 = async (file: File): Promise<string> => {
 };
 
 /**
+ * Generate layout settings for different slide layouts
+ */
+const getSlideLayoutSettings = (layoutType: SlideLayout): any => {
+  // Define different pptxgenjs slide layouts for each layout type
+  switch(layoutType) {
+    case SlideLayout.TEXT_ONLY:
+      return { name: "TEXT", isCommon: true }; // Standard layout with text only
+    case SlideLayout.IMAGE_RIGHT:
+      return { name: "TITLE_AND_CONTENT", isCommon: true }; // Title and content with image on right
+    case SlideLayout.IMAGE_LEFT:
+      return { name: "CONTENT_WITH_CAPTION", isCommon: true }; // Content with caption layout (image left)
+    case SlideLayout.IMAGE_BACKGROUND:
+      return { name: "BLANK", isCommon: true }; // Blank layout for full background image
+    default:
+      return { name: "TEXT", isCommon: true }; // Default to text layout
+  }
+};
+
+/**
  * Generate a PowerPoint presentation with UCL branding
  */
 export const generatePresentation = async (data: PresentationData): Promise<Blob> => {
@@ -382,7 +401,20 @@ export const generatePresentation = async (data: PresentationData): Promise<Blob
     
     // Generate each slide
     for (const [index, slide] of slides.entries()) {
-      const pptxSlide = pptx.addSlide({ masterName: "UCL_MASTER" });
+      // Get the layout for this slide if it's a content slide
+      const keyPointIndex = index <= data.keyPoints.length ? index-1 : -1;
+      const layoutType = keyPointIndex >= 0 ? data.keyPoints[keyPointIndex]?.layout : SlideLayout.TEXT_ONLY;
+      const keyPoint = keyPointIndex >= 0 ? data.keyPoints[keyPointIndex] : null;
+      const hasUploadedImage = keyPoint?.imageFile !== undefined && keyPoint?.imageFile !== null;
+      
+      // Get proper slide layout settings based on the layout type
+      const layoutSettings = getSlideLayoutSettings(layoutType);
+      
+      // Create the slide with appropriate layout
+      const pptxSlide = pptx.addSlide({ 
+        masterName: "UCL_MASTER",
+        ...layoutSettings
+      });
       
       if (index === 0) {
         // Title slide - use dynamic font size
@@ -427,12 +459,6 @@ export const generatePresentation = async (data: PresentationData): Promise<Blob
           h: 0.8
         });
         
-        // Get the layout for this slide
-        const keyPointIndex = index <= data.keyPoints.length ? index-1 : -1;
-        const layoutType = keyPointIndex >= 0 ? data.keyPoints[keyPointIndex]?.layout : SlideLayout.TEXT_ONLY;
-        const keyPoint = keyPointIndex >= 0 ? data.keyPoints[keyPointIndex] : null;
-        const hasUploadedImage = keyPoint?.imageFile !== undefined && keyPoint?.imageFile !== null;
-        
         // Standardize bullet point font size for all points in the slide
         // Use 18pt as the standard size for all bullet points
         const standardPointFontSize = 18;
@@ -455,7 +481,7 @@ export const generatePresentation = async (data: PresentationData): Promise<Blob
             });
             
             // Add image on right
-            if (hasUploadedImage && keyPoint.imageFile) {
+            if (hasUploadedImage && keyPoint?.imageFile) {
               // Use the uploaded image
               try {
                 const imageData = await fileToBase64(keyPoint.imageFile);
@@ -465,7 +491,7 @@ export const generatePresentation = async (data: PresentationData): Promise<Blob
                   y: 1.8,
                   w: 3,
                   h: 3.5,
-                  sizing: { type: "cover", w: 3, h: 3.5 } // Use "cover" to frame the image
+                  sizing: { type: "contain", w: 3, h: 3.5 } // Changed from "cover" to "contain"
                 });
                 console.log(`Added image for slide ${index}, layout: IMAGE_RIGHT`);
               } catch (error) {
@@ -518,7 +544,7 @@ export const generatePresentation = async (data: PresentationData): Promise<Blob
             });
             
             // Add image on left
-            if (hasUploadedImage && keyPoint.imageFile) {
+            if (hasUploadedImage && keyPoint?.imageFile) {
               // Use the uploaded image
               try {
                 const imageData = await fileToBase64(keyPoint.imageFile);
@@ -528,7 +554,7 @@ export const generatePresentation = async (data: PresentationData): Promise<Blob
                   y: 1.8,
                   w: 3,
                   h: 3.5,
-                  sizing: { type: "cover", w: 3, h: 3.5 } // Use "cover" to frame the image
+                  sizing: { type: "contain", w: 3, h: 3.5 } // Changed from "cover" to "contain"
                 });
                 console.log(`Added image for slide ${index}, layout: IMAGE_LEFT`);
               } catch (error) {
@@ -568,18 +594,13 @@ export const generatePresentation = async (data: PresentationData): Promise<Blob
             
           case SlideLayout.IMAGE_BACKGROUND:
             // Background image
-            if (hasUploadedImage && keyPoint.imageFile) {
+            if (hasUploadedImage && keyPoint?.imageFile) {
               try {
                 // Use the uploaded image as background
                 const imageData = await fileToBase64(keyPoint.imageFile);
-                pptxSlide.addImage({
-                  data: imageData, // Use the full data URL
-                  x: 0,
-                  y: 0.5,
-                  w: '100%',
-                  h: '95%',
-                  sizing: { type: "cover", w: "100%", h: "100%" } // Explicitly set width and height for cover
-                });
+                
+                // First, directly add the image as background
+                pptxSlide.background = { data: imageData };
                 console.log(`Added background image for slide ${index}`);
                 
                 // Add semi-transparent overlay for better text readability
