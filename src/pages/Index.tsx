@@ -7,9 +7,9 @@ const Index = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-ucl-light via-white to-ucl-green">
       {/* Logo centered at top */}
-      <div className="w-full py-3 px-4 flex justify-center">
+      <div className="w-full py-3 px-4 flex justify-center bg-black">
         <img 
-          src="/lovable-uploads/6b904904-4b1e-445c-bc68-c2e676f71f8e.png" 
+          src="/lovable-uploads/443f9a9f-bf35-4ad6-8987-021b3e0d695b.png" 
           alt="UCL Logo" 
           className="h-16"
         />
