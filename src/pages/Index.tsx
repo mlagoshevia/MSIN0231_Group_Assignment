@@ -1,36 +1,17 @@
 
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import PresentationForm from "@/components/PresentationForm";
 import { Sparkles } from "lucide-react";
 
 const Index = () => {
-  // Define background color options
-  const backgroundColors = [
-    "from-[#C6B0BC] via-[#C6B0BC]/40 to-[#C6B0BC]/20", // Light purple
-    "from-[#DAD6CA] via-[#DAD6CA]/40 to-[#DAD6CA]/20", // Beige
-    "from-[#DEB8C3] via-[#DEB8C3]/40 to-[#DEB8C3]/20", // Pink (replaced light blue)
-  ];
-
-  // State to hold the selected background color
-  const [backgroundGradient, setBackgroundGradient] = useState("");
-  
-  // Text color state
+  // Text color state - always dark for good contrast with beige background
   const [textColor, setTextColor] = useState("text-ucl-dark");
   
   // Accent color for purple text elements - always UCL purple
   const [accentColor, setAccentColor] = useState("#500778");
 
-  useEffect(() => {
-    // Choose a random background color
-    const randomIndex = Math.floor(Math.random() * backgroundColors.length);
-    setBackgroundGradient(backgroundColors[randomIndex]);
-    
-    // Set text color for better contrast
-    setTextColor("text-ucl-dark");
-  }, []);
-
   return (
-    <div className={`min-h-screen bg-gradient-to-br ${backgroundGradient}`}>
+    <div className="min-h-screen bg-[#DAD6CA]">
       {/* Logo centered at top */}
       <div className="w-full py-3 px-4 flex justify-center">
         <img 
