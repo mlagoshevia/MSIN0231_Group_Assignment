@@ -1,3 +1,4 @@
+
 import React from "react";
 import PresentationForm from "@/components/PresentationForm";
 import { Sparkles } from "lucide-react";
@@ -5,8 +6,8 @@ import { Sparkles } from "lucide-react";
 const Index = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-ucl-light via-white to-ucl-green">
-      {/* Black banner with logo at right */}
-      <div className="w-full bg-ucl-dark py-3 px-4 flex justify-end">
+      {/* Logo at top right with no banner */}
+      <div className="w-full py-3 px-4 flex justify-end">
         <img 
           src="/lovable-uploads/c2323a50-fb1c-437a-8482-980488b23cf7.png" 
           alt="UCL Logo" 
