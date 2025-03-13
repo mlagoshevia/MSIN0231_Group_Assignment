@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -62,7 +61,6 @@ const PresentationForm = () => {
   const addKeyPoint = () => {
     if (newKeyPoint.trim() === "") return;
     
-    // Add the new key point
     const updatedKeyPoints = [...formData.keyPoints, newKeyPoint.trim()];
     
     setFormData({
@@ -97,7 +95,6 @@ const PresentationForm = () => {
     
     const newIndex = direction === 'up' ? index - 1 : index + 1;
     
-    // Move key points
     const updatedKeyPoints = [...formData.keyPoints];
     const tempPoint = updatedKeyPoints[index];
     updatedKeyPoints[index] = updatedKeyPoints[newIndex];
@@ -114,28 +111,28 @@ const PresentationForm = () => {
     setLoading(true);
     setPresentationBlob(null);
     
-    // Log the form data
     console.log("Form submitted:", { 
       ...formData, 
-      apiKey: formData.apiKey ? "********" : "" // Hide API key in logs
+      apiKey: formData.apiKey ? "********" : "" 
     });
     
     try {
-      // Start the AI generation process
       setGeneratingAI(true);
       toast({
-        title: "AI is crafting your presentation",
-        description: "Connecting to Gemini API and generating enhanced content...",
+        title: "Preparing your presentation",
+        description: "Creating your presentation with your provided key points...",
         duration: 3000,
       });
       
-      // Convert keyPoints to slides format for the API
-      const slides = formData.keyPoints.map(point => ({
-        title: point,
-        content: ["Content will be enhanced with AI", "Add more bullet points here"]
-      }));
+      const slides = formData.keyPoints.map(point => {
+        const contentPoints = generateContentPointsFromKeyPoint(point);
+        
+        return {
+          title: point,
+          content: contentPoints
+        };
+      });
       
-      // Prepare input for presentation generator
       const presentationInput: PresentationInput = {
         title: formData.title,
         slides: slides,
@@ -143,17 +140,14 @@ const PresentationForm = () => {
         colors: getColorsFromTemplate(formData.template)
       };
       
-      // Generate the presentation
       const pptxBlob = await generatePresentation(presentationInput);
       
-      // Ensure we're setting a Blob
       if (pptxBlob instanceof Blob) {
         setPresentationBlob(pptxBlob);
       } else {
         throw new Error("Failed to generate presentation: Invalid output format");
       }
       
-      // Show success toast
       toast({
         title: "Presentation generated!",
         description: `Your "${formData.title}" presentation has been created.`,
@@ -172,43 +166,55 @@ const PresentationForm = () => {
     }
   };
 
-  // Helper function to get colors based on template
+  const generateContentPointsFromKeyPoint = (keyPoint: string): string[] => {
+    const words = keyPoint.split(' ');
+    const contentPoints = [
+      `${keyPoint} is a critical aspect to consider`,
+      `Research shows that ${words[0].toLowerCase()} ${words.slice(1).join(' ')} impacts outcomes`,
+      `Consider how ${keyPoint.toLowerCase()} affects different stakeholders`,
+      `Implementation strategies for ${keyPoint.toLowerCase()} include systematic approaches`,
+      `Future developments may change how we approach ${keyPoint.toLowerCase()}`
+    ];
+    
+    return contentPoints.slice(0, Math.floor(Math.random() * 2) + 3);
+  };
+
   const getColorsFromTemplate = (template: string) => {
     switch (template) {
       case 'purple':
         return {
-          main: "#500778", // Vibrant Purple
-          light: "#C6B0BC", // Muted Purple
-          dark: "#2C0442", // Dark Purple
-          accent: "#52C152" // Vibrant Green
+          main: "#500778",
+          light: "#C6B0BC",
+          dark: "#2C0442",
+          accent: "#52C152"
         };
       case 'green':
         return {
-          main: "#52C152", // Vibrant Green
-          light: "#C9D1A8", // Muted Green
-          dark: "#113B3A", // Dark Green
-          accent: "#500778" // Vibrant Purple
+          main: "#52C152",
+          light: "#C9D1A8",
+          dark: "#113B3A",
+          accent: "#500778"
         };
       case 'dark':
         return {
-          main: "#002248", // Dark Blue
-          light: "#B6DCE5", // Muted Blue
-          dark: "#000000", // Black
-          accent: "#FFCA36" // Vibrant Yellow
+          main: "#002248",
+          light: "#B6DCE5",
+          dark: "#000000",
+          accent: "#FFCA36"
         };
       case 'light':
         return {
-          main: "#34C6C6", // Vibrant Blue
-          light: "#FFFFFF", // White
-          dark: "#002248", // Dark Blue
-          accent: "#AC145A" // Vibrant Pink
+          main: "#34C6C6",
+          light: "#FFFFFF",
+          dark: "#002248",
+          accent: "#AC145A"
         };
       default:
         return {
-          main: "#500778", // Vibrant Purple
-          light: "#C6B0BC", // Muted Purple
-          dark: "#2C0442", // Dark Purple
-          accent: "#52C152" // Vibrant Green
+          main: "#500778",
+          light: "#C6B0BC",
+          dark: "#2C0442",
+          accent: "#52C152"
         };
     }
   };
@@ -267,7 +273,6 @@ const PresentationForm = () => {
               </span>
             </Label>
             
-            {/* List of existing key points */}
             <div className="mt-2 space-y-2">
               {formData.keyPoints.map((point, index) => (
                 <div 
@@ -322,7 +327,6 @@ const PresentationForm = () => {
               )}
             </div>
             
-            {/* Add new key point */}
             <div className="mt-2 flex gap-2">
               <Input
                 value={newKeyPoint}

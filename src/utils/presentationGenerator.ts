@@ -42,8 +42,8 @@ export const generatePresentation = async (
   generateContentSlides(pres, input);
 
   // Return the PPTX as a blob
-  // Fix the type issue by casting to Blob or using as Promise<Blob>
-  return pres.writeFile({ output: 'blob' }) as Promise<Blob>;
+  // Use the correct property for PPTXGenJS
+  return pres.writeFile({ outputType: "blob" }) as Promise<Blob>;
 };
 
 // Helper function to download a blob as a file
@@ -74,13 +74,14 @@ const createMasterSlide = (
     title: "UCL_MASTER",
     background: { color: "#FFFFFF" },
     objects: [
-      // UCL Logo in the background
+      // UCL Logo in the background (maintaining original proportions)
       {
         image: {
           path: "/lovable-uploads/702c3a84-29b0-4240-848a-6ea26b3efe60.png",
-          y: 5.0,
-          w: 1.0,
-          h: 0.5,
+          x: 9.0,  // Position on the right side
+          y: 5.0,  // Position at the bottom
+          w: 1.0,  // Width (keeping proportions)
+          h: 0.5,  // Height (keeping proportions)
           transparency: 20,
         }
       },
@@ -88,8 +89,9 @@ const createMasterSlide = (
       {
         text: {
           text: "UCL Presentation Generator",
-          y: 5.0,
-          w: 3.0,
+          x: 0.3,  // Position on the left side
+          y: 5.0,  // Position at the bottom
+          w: 3.0,  
           h: 0.5,
           color: darkColor,
           fontFace: "Arial",
@@ -101,6 +103,7 @@ const createMasterSlide = (
       // Footer line
       {
         line: {
+          x: 0.3,
           y: 5.0,
           w: 9.4,
           h: 0,
@@ -181,41 +184,10 @@ const generateCoverSlide = (pres: pptxgen, input: PresentationInput) => {
 
 // Function to generate content slides
 const generateContentSlides = (pres: pptxgen, input: PresentationInput) => {
-  // Get repository images for slides
-  const repoImages = [
-    "/lovable-uploads/191fae70-1c3c-4031-9f58-0776a5d9de10.png",
-    "/lovable-uploads/20bba994-fe28-4d19-b7bf-57f9cecc04c5.png",
-    "/lovable-uploads/5938d1c9-574c-44a7-9d45-334cf5ce65ec.png",
-    "/lovable-uploads/6b83f318-76b7-404a-83ca-9f60be513eb0.png",
-    "/lovable-uploads/6b904904-4b1e-445c-bc68-c2e676f71f8e.png",
-    "/lovable-uploads/91972324-64c1-4c6b-80f7-58d8d483171b.png",
-    "/lovable-uploads/aade0ccc-38eb-42d1-b595-9ca4ea4d9984.png",
-    "/lovable-uploads/acac0ed1-4db7-4b9d-a7ed-4ef3e795d0fc.png",
-    "/lovable-uploads/acda080f-a4c5-4cfe-bec2-ea5bd50a72a9.png",
-    "/lovable-uploads/d626aca5-5787-4ae5-90e4-08aa2f9f1156.png",
-    "/lovable-uploads/d7b8167b-481f-4054-951f-42e5a4ee01d8.png",
-    "/lovable-uploads/dc58b3fd-75c7-468e-94be-8dbb433d088d.png",
-    "/lovable-uploads/e4b472d5-865e-4cb1-8fec-f80be909c236.png",
-  ];
-
   // Loop through each slide
   input.slides.forEach((slide, index) => {
     // Create a new slide
     const contentSlide = pres.addSlide({ masterName: "UCL_MASTER" });
-
-    // Get a random image for this slide's background
-    const randomIndex = Math.floor(Math.random() * repoImages.length);
-    const randomImage = repoImages[randomIndex];
-
-    // Add faint background image
-    contentSlide.addImage({
-      path: randomImage,
-      x: 0,
-      y: 0,
-      w: "100%",
-      h: "100%",
-      transparency: 90,
-    });
 
     // Add slide title
     contentSlide.addText(slide.title, {
