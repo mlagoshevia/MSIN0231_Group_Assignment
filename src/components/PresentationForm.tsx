@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -34,12 +35,12 @@ const AUDIENCE_OPTIONS = [
 ];
 
 const TEMPLATE_OPTIONS = [
-  { name: "UCL Vibrant Purple", value: "purple" },
+  { name: "UCL Dark Purple", value: "purple" },
   { name: "UCL Dark Blue", value: "dark" },
   { name: "Light Theme", value: "light" },
-  { name: "UCL Vibrant Green", value: "green" },
-  { name: "UCL Vibrant Blue", value: "blue" },
-  { name: "UCL Vibrant Pink", value: "pink" },
+  { name: "UCL Dark Green", value: "green" },
+  { name: "UCL Dark Blue", value: "blue" },
+  { name: "UCL Dark Pink", value: "pink" },
 ];
 
 const PresentationForm = () => {

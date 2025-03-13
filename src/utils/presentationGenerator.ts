@@ -20,8 +20,8 @@ interface GeminiResponse {
   slides: SlideContent[];
 }
 
-// UCL logo
-const UCL_LOGO = "public/lovable-uploads/35370728-2b16-44cd-8840-54301d060849.png";
+// UCL logo - using white logo version
+const UCL_LOGO = "public/lovable-uploads/9b11400a-51d4-4e56-81cd-7ec98fdbe988.png";
 
 /**
  * Generate enhanced content using Gemini API
@@ -279,19 +279,19 @@ const generateSlides = async (data: PresentationData): Promise<SlideContent[]> =
 const getTemplateColors = (template: string): { primary: string; secondary: string; text: string } => {
   switch (template) {
     case "purple":
-      return { primary: "#500778", secondary: "#E8E3E7", text: "#000000" }; // UCL Vibrant Purple
+      return { primary: "#2C0442", secondary: "#E8E3E7", text: "#000000" }; // UCL Dark Purple
     case "dark":
       return { primary: "#002248", secondary: "#E0E0E0", text: "#FFFFFF" }; // UCL Dark Blue
     case "light":
       return { primary: "#F5F5F5", secondary: "#E0E0E0", text: "#000000" }; // Light theme
     case "green":
-      return { primary: "#52C152", secondary: "#E8F4EB", text: "#000000" }; // UCL Vibrant Green
+      return { primary: "#113B3A", secondary: "#E8F4EB", text: "#000000" }; // UCL Dark Green
     case "blue":
-      return { primary: "#34C6C6", secondary: "#E0F5F5", text: "#000000" }; // UCL Vibrant Blue
+      return { primary: "#002248", secondary: "#E0F5F5", text: "#000000" }; // UCL Dark Blue
     case "pink":
-      return { primary: "#AC145A", secondary: "#F9E4ED", text: "#000000" }; // UCL Vibrant Pink
+      return { primary: "#4B0A42", secondary: "#F9E4ED", text: "#000000" }; // UCL Dark Pink
     default:
-      return { primary: "#500778", secondary: "#E8E3E7", text: "#000000" }; // Default to UCL Purple
+      return { primary: "#2C0442", secondary: "#E8E3E7", text: "#000000" }; // Default to UCL Dark Purple
   }
 };
 

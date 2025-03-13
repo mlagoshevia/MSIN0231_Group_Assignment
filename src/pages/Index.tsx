@@ -8,9 +8,9 @@ const Index = () => {
     <div className="min-h-screen bg-gradient-to-br from-ucl-light via-white to-ucl-green p-4">
       <div className="max-w-4xl mx-auto">
         <div className="flex flex-col items-center mb-8 animate-slide-up">
-          {/* UCL Logo added to the top */}
+          {/* UCL Logo using the white logo on dark background */}
           <img 
-            src="/lovable-uploads/702c3a84-29b0-4240-848a-6ea26b3efe60.png" 
+            src="/lovable-uploads/9b11400a-51d4-4e56-81cd-7ec98fdbe988.png" 
             alt="UCL Logo" 
             className="h-16 mb-6"
           />
