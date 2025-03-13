@@ -1,4 +1,3 @@
-
 import pptxgen from "pptxgenjs";
 
 // Define presentation data types
@@ -21,7 +20,7 @@ interface GeminiResponse {
 }
 
 // UCL logo
-const UCL_LOGO = "public/lovable-uploads/702c3a84-29b0-4240-848a-6ea26b3efe60.png";
+const UCL_LOGO = "public/lovable-uploads/35370728-2b16-44cd-8840-54301d060849.png";
 
 /**
  * Generate enhanced content using Gemini API
@@ -318,8 +317,7 @@ export const generatePresentation = async (data: PresentationData): Promise<Blob
         // Header
         { rect: { x: 0, y: 0, w: '100%', h: 0.5, fill: { color: colors.primary } } },
         // Footer
-        { rect: { x: 0, y: '95%', w: '100%', h: 0.3, fill: { color: colors.primary } } },
-        { text: { text: "UCL Presentation Generator", y: 6.7, w: 4, h: 0.3, color: "#FFFFFF", fontFace: "Arial", fontSize: 8 } }
+        { rect: { x: 0, y: '95%', w: '100%', h: 0.3, fill: { color: colors.primary } } }
       ]
     });
     
@@ -402,26 +400,14 @@ export const generatePresentation = async (data: PresentationData): Promise<Blob
         });
       }
       
-      // Text underneath the logo (added right before the logo)
-      pptxSlide.addText("UCL Presentation Generator", {
-        fontSize: 8,
-        color: "#FFFFFF",
-        x: 0.25,
-        y: 0.35,
-        w: 2,
-        h: 0.3,
-        align: "left",
-        fontFace: "Arial"
-      });
-      
       // Add UCL logo to top left of every slide (as the LAST action as requested)
       pptxSlide.addImage({
         path: UCL_LOGO,
         x: 0,
         y: 0,
-        w: 0.5,
-        h: 0.3,
-        sizing: { type: "contain", w: 0.5, h: 0.3 }
+        w: 1.7,
+        h: 0.5,
+        sizing: { type: "contain" }
       });
     });
     
