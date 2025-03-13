@@ -1,3 +1,4 @@
+
 import pptxgen from "pptxgenjs";
 
 // Define presentation data types
@@ -307,7 +308,7 @@ export const generatePresentation = async (data: PresentationData): Promise<Blob
     
     // Set presentation properties
     pptx.layout = "LAYOUT_16x9";
-    pptx.author = "UCL Presentation Generator";
+    pptx.author = "Presentation Generator";
     pptx.title = data.title;
     pptx.subject = data.purpose;
     
@@ -340,11 +341,11 @@ export const generatePresentation = async (data: PresentationData): Promise<Blob
           h: 1.5
         });
         
-        // Purpose and audience
+        // Purpose and audience - make subtitle text black by default
         slide.points.forEach((point, pointIndex) => {
           pptxSlide.addText(point, {
             fontSize: 20,
-            color: colors.text === "#FFFFFF" ? "#FFFFFF" : "#000000",
+            color: "#000000", // Set to black by default
             align: 'center',
             x: 1,
             y: 3 + pointIndex * 0.5,
