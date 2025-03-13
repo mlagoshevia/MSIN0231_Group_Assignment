@@ -335,15 +335,13 @@ const calculateFontSize = (text: string, isTitle: boolean = false): number => {
 /**
  * Convert a File object to base64 for pptxgenjs
  */
-const fileToBase64 = (file: File): Promise<string> => {
+const fileToBase64 = async (file: File): Promise<string> => {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.readAsDataURL(file);
     reader.onload = () => {
       if (typeof reader.result === 'string') {
-        // Remove the data URL prefix (e.g., "data:image/jpeg;base64,")
-        const base64 = reader.result.split(',')[1];
-        resolve(base64);
+        resolve(reader.result);
       } else {
         reject(new Error('Failed to convert file to base64'));
       }
@@ -454,15 +452,29 @@ export const generatePresentation = async (data: PresentationData): Promise<Blob
             // Add image on right
             if (hasUploadedImage && keyPoint.imageFile) {
               // Use the uploaded image
-              const base64Image = await fileToBase64(keyPoint.imageFile);
-              pptxSlide.addImage({
-                data: `base64://${base64Image}`,
-                x: 6.5,
-                y: 1.8,
-                w: 3,
-                h: 3.5,
-                sizing: { type: "contain", w: 3, h: 3.5 }
-              });
+              try {
+                const imageData = await fileToBase64(keyPoint.imageFile);
+                pptxSlide.addImage({
+                  data: imageData, // Use the full data URL
+                  x: 6.5,
+                  y: 1.8,
+                  w: 3,
+                  h: 3.5,
+                  sizing: { type: "contain", w: 3, h: 3.5 }
+                });
+                console.log(`Added image for slide ${index}, layout: IMAGE_RIGHT`);
+              } catch (error) {
+                console.error(`Error adding image to slide ${index}:`, error);
+                // Add placeholder if image fails
+                pptxSlide.addShape('rect', {
+                  x: 6.5,
+                  y: 1.8,
+                  w: 3,
+                  h: 3.5,
+                  fill: { color: 'F1F1F1' },
+                  line: { color: 'DDDDDD', width: 1 }
+                });
+              }
             } else {
               // Add placeholder
               pptxSlide.addShape('rect', {
@@ -504,15 +516,29 @@ export const generatePresentation = async (data: PresentationData): Promise<Blob
             // Add image on left
             if (hasUploadedImage && keyPoint.imageFile) {
               // Use the uploaded image
-              const base64Image = await fileToBase64(keyPoint.imageFile);
-              pptxSlide.addImage({
-                data: `base64://${base64Image}`,
-                x: 0.5,
-                y: 1.8,
-                w: 3,
-                h: 3.5,
-                sizing: { type: "contain", w: 3, h: 3.5 }
-              });
+              try {
+                const imageData = await fileToBase64(keyPoint.imageFile);
+                pptxSlide.addImage({
+                  data: imageData, // Use the full data URL
+                  x: 0.5,
+                  y: 1.8,
+                  w: 3,
+                  h: 3.5,
+                  sizing: { type: "contain", w: 3, h: 3.5 }
+                });
+                console.log(`Added image for slide ${index}, layout: IMAGE_LEFT`);
+              } catch (error) {
+                console.error(`Error adding image to slide ${index}:`, error);
+                // Add placeholder if image fails
+                pptxSlide.addShape('rect', {
+                  x: 0.5,
+                  y: 1.8,
+                  w: 3,
+                  h: 3.5,
+                  fill: { color: 'F1F1F1' },
+                  line: { color: 'DDDDDD', width: 1 }
+                });
+              }
             } else {
               // Add placeholder
               pptxSlide.addShape('rect', {
@@ -537,36 +563,41 @@ export const generatePresentation = async (data: PresentationData): Promise<Blob
             break;
             
           case SlideLayout.IMAGE_BACKGROUND:
-            // Semi-transparent overlay for text over image
-            pptxSlide.addShape('rect', {
-              x: 0,
-              y: 0.5,
-              w: '100%',
-              h: '95%',
-              fill: { color: colors.secondary, transparency: 0.7 }
-            });
-            
             // Background image
             if (hasUploadedImage && keyPoint.imageFile) {
-              // Use the uploaded image as background
-              const base64Image = await fileToBase64(keyPoint.imageFile);
-              pptxSlide.addImage({
-                data: `base64://${base64Image}`,
-                x: 0,
-                y: 0.5,
-                w: '100%',
-                h: '95%',
-                sizing: { type: "cover", w: "100%", h: "100%" }
-              });
-              
-              // Add semi-transparent overlay for better text readability
-              pptxSlide.addShape('rect', {
-                x: 0,
-                y: 0.5,
-                w: '100%',
-                h: '95%',
-                fill: { color: colors.secondary, transparency: 0.7 }
-              });
+              try {
+                // Use the uploaded image as background
+                const imageData = await fileToBase64(keyPoint.imageFile);
+                pptxSlide.addImage({
+                  data: imageData, // Use the full data URL
+                  x: 0,
+                  y: 0.5,
+                  w: '100%',
+                  h: '95%',
+                  sizing: { type: "cover", w: "100%", h: "100%" }
+                });
+                console.log(`Added background image for slide ${index}`);
+                
+                // Add semi-transparent overlay for better text readability
+                pptxSlide.addShape('rect', {
+                  x: 0,
+                  y: 0.5,
+                  w: '100%',
+                  h: '95%',
+                  fill: { color: colors.secondary, transparency: 0.7 }
+                });
+              } catch (error) {
+                console.error(`Error adding background image to slide ${index}:`, error);
+                // Image placeholder
+                pptxSlide.addShape('rect', {
+                  x: 0.5,
+                  y: 1,
+                  w: 9,
+                  h: 5,
+                  fill: { color: 'F1F1F1' },
+                  line: { color: 'DDDDDD', width: 1 }
+                });
+              }
             } else {
               // Image placeholder
               pptxSlide.addShape('rect', {
