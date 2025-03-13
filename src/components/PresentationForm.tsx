@@ -24,7 +24,8 @@ import {
 } from "lucide-react";
 import { 
   generatePresentation, 
-  downloadPresentation 
+  downloadPresentation,
+  PresentationInput
 } from "@/utils/presentationGenerator";
 
 const AUDIENCE_OPTIONS = [
@@ -128,8 +129,22 @@ const PresentationForm = () => {
         duration: 3000,
       });
       
-      // Generate the presentation with Gemini-enhanced content
-      const pptxBlob = await generatePresentation(formData);
+      // Convert keyPoints to slides format for the API
+      const slides = formData.keyPoints.map(point => ({
+        title: point,
+        content: ["Content will be enhanced with AI", "Add more bullet points here"]
+      }));
+      
+      // Prepare input for presentation generator
+      const presentationInput: PresentationInput = {
+        title: formData.title,
+        slides: slides,
+        audienceLevel: formData.audience,
+        colors: getColorsFromTemplate(formData.template)
+      };
+      
+      // Generate the presentation
+      const pptxBlob = await generatePresentation(presentationInput);
       
       // Ensure we're setting a Blob
       if (pptxBlob instanceof Blob) {
@@ -154,6 +169,47 @@ const PresentationForm = () => {
     } finally {
       setGeneratingAI(false);
       setLoading(false);
+    }
+  };
+
+  // Helper function to get colors based on template
+  const getColorsFromTemplate = (template: string) => {
+    switch (template) {
+      case 'purple':
+        return {
+          main: "#500778", // Vibrant Purple
+          light: "#C6B0BC", // Muted Purple
+          dark: "#2C0442", // Dark Purple
+          accent: "#52C152" // Vibrant Green
+        };
+      case 'green':
+        return {
+          main: "#52C152", // Vibrant Green
+          light: "#C9D1A8", // Muted Green
+          dark: "#113B3A", // Dark Green
+          accent: "#500778" // Vibrant Purple
+        };
+      case 'dark':
+        return {
+          main: "#002248", // Dark Blue
+          light: "#B6DCE5", // Muted Blue
+          dark: "#000000", // Black
+          accent: "#FFCA36" // Vibrant Yellow
+        };
+      case 'light':
+        return {
+          main: "#34C6C6", // Vibrant Blue
+          light: "#FFFFFF", // White
+          dark: "#002248", // Dark Blue
+          accent: "#AC145A" // Vibrant Pink
+        };
+      default:
+        return {
+          main: "#500778", // Vibrant Purple
+          light: "#C6B0BC", // Muted Purple
+          dark: "#2C0442", // Dark Purple
+          accent: "#52C152" // Vibrant Green
+        };
     }
   };
 

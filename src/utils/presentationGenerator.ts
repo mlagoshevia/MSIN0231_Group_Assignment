@@ -8,7 +8,7 @@ interface Slide {
 }
 
 // Define the type for presentation input
-interface PresentationInput {
+export interface PresentationInput {
   title: string;
   slides: Slide[];
   totalLength?: number;
@@ -42,7 +42,20 @@ export const generatePresentation = async (
   generateContentSlides(pres, input);
 
   // Return the PPTX as a blob
-  return pres.writeFile({ outputType: "blob" }) as Promise<Blob>;
+  // Fix the type issue by casting to Blob or using as Promise<Blob>
+  return pres.writeFile({ output: 'blob' }) as Promise<Blob>;
+};
+
+// Helper function to download a blob as a file
+export const downloadPresentation = (blob: Blob, filename: string) => {
+  const url = window.URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  window.URL.revokeObjectURL(url);
+  document.body.removeChild(a);
 };
 
 // Function to create a branded master slide
@@ -65,7 +78,6 @@ const createMasterSlide = (
       {
         image: {
           path: "/lovable-uploads/702c3a84-29b0-4240-848a-6ea26b3efe60.png",
-          x: 9.0,
           y: 5.0,
           w: 1.0,
           h: 0.5,
@@ -76,7 +88,6 @@ const createMasterSlide = (
       {
         text: {
           text: "UCL Presentation Generator",
-          x: 0.3,
           y: 5.0,
           w: 3.0,
           h: 0.5,
@@ -90,7 +101,6 @@ const createMasterSlide = (
       // Footer line
       {
         line: {
-          x: 0.3,
           y: 5.0,
           w: 9.4,
           h: 0,
@@ -103,7 +113,7 @@ const createMasterSlide = (
 
 // Function to generate the cover slide
 const generateCoverSlide = (pres: pptxgen, input: PresentationInput) => {
-  // Get a random image from the repository images
+  // Get repository images for random selection
   const repoImages = [
     "/lovable-uploads/191fae70-1c3c-4031-9f58-0776a5d9de10.png",
     "/lovable-uploads/20bba994-fe28-4d19-b7bf-57f9cecc04c5.png",
